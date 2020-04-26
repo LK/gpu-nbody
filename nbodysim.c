@@ -15,7 +15,7 @@
   (sdata.data + i * (sdata.dim * 2 + sdata.dataDim) + 2 * sdata.dim)
 
 void getForce(float *force, float *position, float *features,
-              float *positionActor, float *featuresActor, struct simdata data) {
+              float *positionActor, float *featuresActor, simdata_t data) {
 
   float feature = features[0];
   float featureActor = featuresActor[0];
@@ -41,7 +41,7 @@ void getForce(float *force, float *position, float *features,
 }
 
 void integrator(float *position, float *velocity, float *acceleration,
-                float timeStep, struct simdata sdata) {
+                float timeStep, simdata_t sdata) {
   for (int i = 0; i < sdata.dim; i++) {
     position[i] +=
         velocity[i] * timeStep + 0.5 * acceleration[i] * timeStep * timeStep;
@@ -49,7 +49,7 @@ void integrator(float *position, float *velocity, float *acceleration,
   }
 }
 
-void dump(struct simdata data, int step) {
+void dump(simdata_t data, int step) {
   printf("=============== STEP %d ===============\n", step);
   for (int i = 0; i < data.numParticles; i++) {
     printf("\t(%.04f, %.04f)\t(%.04f, %.04f)\n", GET_POSITION(data, i)[0],
@@ -58,7 +58,8 @@ void dump(struct simdata data, int step) {
   }
 }
 
-void runSimulation(struct simdata data, float timeStep, int steps) {
+void runSimulation(simdata_t data, integrator_t int_type, force_t force_type,
+                   float timeStep, int steps) {
   float *accelerations =
       (float *)malloc(sizeof(float) * data.dim * data.numParticles);
   for (int step = 0; step < steps; step++) {
@@ -92,7 +93,7 @@ void runSimulation(struct simdata data, float timeStep, int steps) {
 }
 
 int main() {
-  struct simdata data;
+  simdata_t data;
   data.dim = 2;
   data.numParticles = 2;
   data.dataDim = 1;
@@ -109,7 +110,7 @@ int main() {
   data.data[8] = 0;
   data.data[9] = 10;
 
-  runSimulation(data, .1, 100);
+  runSimulation(data, INT_EULER, FORCE_NEWTONIAN, .1, 100);
 
   return 0;
 }
