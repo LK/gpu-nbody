@@ -14,7 +14,7 @@ int main() {
   sdata->data[8] = 0;
   sdata->data[9] = 10;
 
-  runSimulation(sdata, INT_EULER, FORCE_NEWTONIAN, .1, 100);
+  run_simulation(sdata, INT_EULER, FORCE_NEWTONIAN, .1, 100);
 
   return 0;
 }

@@ -12,6 +12,20 @@ simdata_t *simdata_create(unsigned int posdim, unsigned int featdim,
   return sdata;
 }
 
+inline float *simdata_pos_ptr(simdata_t *sdata, unsigned int idx) {
+  return (sdata->data + idx * (sdata->posdim * 2 + sdata->featdim));
+}
+
+inline float *simdata_vel_ptr(simdata_t *sdata, unsigned int idx) {
+  return (sdata->data + idx * (sdata->posdim * 2 + sdata->featdim) +
+          sdata->posdim);
+}
+
+inline float *simdata_feat_ptr(simdata_t *sdata, unsigned int idx) {
+  return (sdata->data + idx * (sdata->posdim * 2 + sdata->featdim) +
+          2 * sdata->posdim);
+}
+
 void simdata_free(simdata_t *sdata) {
   free(sdata->data);
   free(sdata);

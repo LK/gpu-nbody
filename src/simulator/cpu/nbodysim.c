@@ -7,13 +7,6 @@
 //#define G (6.673 * pow(10, -11))
 #define G 1
 
-#define GET_POSITION(sdata, i)                                                 \
-  (sdata->data + i * (sdata->posdim * 2 + sdata->featdim))
-#define GET_VELOCITY(sdata, i)                                                 \
-  (sdata->data + i * (sdata->posdim * 2 + sdata->featdim) + sdata->posdim)
-#define GET_FEATURES(sdata, i)                                                 \
-  (sdata->data + i * (sdata->posdim * 2 + sdata->featdim) + 2 * sdata->posdim)
-
 void getForce(float *force, float *position, float *features,
               float *positionActor, float *featuresActor, simdata_t *sdata) {
 
@@ -51,15 +44,17 @@ void integrator(float *position, float *velocity, float *acceleration,
 
 void dump(simdata_t *sdata, int step) {
   printf("=============== STEP %d ===============\n", step);
+  float *pos, *vel;
   for (int i = 0; i < sdata->nparticles; i++) {
-    printf("\t(%.04f, %.04f)\t(%.04f, %.04f)\n", GET_POSITION(sdata, i)[0],
-           GET_POSITION(sdata, i)[1], GET_VELOCITY(sdata, i)[0],
-           GET_VELOCITY(sdata, i)[1]);
+    pos = simdata_pos_ptr(sdata, i);
+    vel = simdata_vel_ptr(sdata, i);
+    printf("\t(%.04f, %.04f)\t(%.04f, %.04f)\n", pos[0], pos[1], vel[0],
+           vel[1]);
   }
 }
 
-void runSimulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
-                   float timeStep, int steps) {
+void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
+                    float time_step, int steps) {
   float *accelerations =
       (float *)malloc(sizeof(float) * sdata->posdim * sdata->nparticles);
   for (int step = 0; step < steps; step++) {
@@ -67,14 +62,14 @@ void runSimulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
       float *acceleration = &accelerations[i * sdata->posdim];
       memset(acceleration, 0, sdata->posdim * sizeof(float));
 
-      float *position = GET_POSITION(sdata, i);
-      float *features = GET_FEATURES(sdata, i);
+      float *position = simdata_pos_ptr(sdata, i);
+      float *features = simdata_feat_ptr(sdata, i);
 
       for (int j = 0; j < sdata->nparticles; j++) {
         if (i == j)
           continue;
-        float *positionActor = GET_POSITION(sdata, j);
-        float *featuresActor = GET_FEATURES(sdata, j);
+        float *positionActor = simdata_pos_ptr(sdata, i);
+        float *featuresActor = simdata_feat_ptr(sdata, i);
 
         getForce(acceleration, position, features, positionActor, featuresActor,
                  sdata);
@@ -85,8 +80,8 @@ void runSimulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
     }
 
     for (int i = 0; i < sdata->nparticles; i++) {
-      integrator(GET_POSITION(sdata, i), GET_VELOCITY(sdata, i),
-                 accelerations + i * sdata->posdim, timeStep, sdata);
+      integrator(simdata_pos_ptr(sdata, i), simdata_vel_ptr(sdata, i),
+                 accelerations + i * sdata->posdim, time_step, sdata);
     }
     dump(sdata, step);
   }
