@@ -1,10 +1,12 @@
 CC = gcc
+CFLAGS = "-Iinclude"
+SRC = src
+BIN = bin
 
+all: test-cpu
 
-all: nbodysim
+test-cpu: src/simulator/cpu/nbodysim.c src/test/test.c
+	$(CC) -o bin/$@ $(CFLAGS) $^
 
-nbodysim: nbodysim.c
-	$(CC) -o $@ $^
-
-
-
+clean:
+	rm -r $(BIN)/*
