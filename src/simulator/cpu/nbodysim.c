@@ -68,8 +68,8 @@ void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
       for (int j = 0; j < sdata->nparticles; j++) {
         if (i == j)
           continue;
-        float *positionActor = simdata_pos_ptr(sdata, i);
-        float *featuresActor = simdata_feat_ptr(sdata, i);
+        float *positionActor = simdata_pos_ptr(sdata, j);
+        float *featuresActor = simdata_feat_ptr(sdata, j);
 
         getForce(acceleration, position, features, positionActor, featuresActor,
                  sdata);
