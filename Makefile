@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Iinclude -O3
+CFLAGS = -Iinclude -O3 -std=c99 -lm
 
 NVCC = nvcc
 NVCCFLAGS = $(CFLAGS) -O3
