@@ -2,24 +2,19 @@
 #include <stdlib.h>
 
 int main() {
-  simdata_t data;
-  data.dim = 2;
-  data.numParticles = 2;
-  data.dataDim = 1;
-  data.data = (float *)malloc(sizeof(float) * 10);
-  data.data[0] = 10;
-  data.data[1] = 0;
-  data.data[2] = 0;
-  data.data[3] = 0;
-  data.data[4] = 10;
+  simdata_t *sdata = simdata_create(2, 1, 2);
+  sdata->data[0] = 10;
+  sdata->data[1] = 0;
+  sdata->data[2] = 0;
+  sdata->data[3] = 0;
+  sdata->data[4] = 10;
+  sdata->data[5] = -10;
+  sdata->data[6] = 0;
+  sdata->data[7] = 0;
+  sdata->data[8] = 0;
+  sdata->data[9] = 10;
 
-  data.data[5] = -10;
-  data.data[6] = 0;
-  data.data[7] = 0;
-  data.data[8] = 0;
-  data.data[9] = 10;
-
-  runSimulation(data, INT_EULER, FORCE_NEWTONIAN, .1, 100);
+  runSimulation(sdata, INT_EULER, FORCE_NEWTONIAN, .1, 100);
 
   return 0;
 }
