@@ -5,7 +5,7 @@
 #include <string.h>
 
 //#define G (6.673 * pow(10, -11))
-#define G 1
+#define G (6.673 * pow(10, -11) * 13.3153474)
 
 void getForce(float *force, float *position, float *features,
               float *positionActor, float *featuresActor, simdata_t *sdata) {
@@ -83,6 +83,7 @@ void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
       integrator(simdata_pos_ptr(sdata, i), simdata_vel_ptr(sdata, i),
                  accelerations + i * sdata->posdim, time_step, sdata);
     }
-    dump(sdata, step);
+    // dump(sdata, step);
   }
+  free(accelerations);
 }
