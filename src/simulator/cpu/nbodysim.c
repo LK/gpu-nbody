@@ -85,4 +85,5 @@ void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
     }
     // dump(sdata, step);
   }
+  free(accelerations);
 }

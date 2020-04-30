@@ -18,10 +18,10 @@ int main() {
   sdata->data[7] = 0;
   sdata->data[8] = 0;
   sdata->data[9] = 10;
-
+  simdata_free(sdata);
   // run_simulation(sdata, INT_EULER, FORCE_NEWTONIAN, .1, 100);
 
-  solar_system_test(SUN);
+  solar_system_test(SATURN);
 
   return 0;
 }
@@ -46,4 +46,6 @@ void solar_system_test(celestial_t test_planet) {
 
     printf("JULIAN DATE %f - POSITION ERROR = %f --- VELOCITY ERROR = %f\n", julian_dates[i],relative_error(sdata->data + test_planet*7,real_position,3),relative_error(sdata->data + test_planet*7+3,real_velocity,3));
   }
+  free(julian_dates);
+  simdata_free(sdata);
 }

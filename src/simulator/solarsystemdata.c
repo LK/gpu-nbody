@@ -75,7 +75,6 @@ void load_index_vectors(int index,float* position_dest,float* velocity_dest,cele
     FILE* stream = fopen(get_planet_filename(planet),"r");
     char line[512];
     for(int i = 0; i <= index;i++) fgets(line,512,stream);
-    char* tmp = strdup(line);
     for(int i = 0; i < 3; i++){
         char* tmp = strdup(line);
         char* tmp2 = strdup(line);
