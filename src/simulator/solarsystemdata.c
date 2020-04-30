@@ -6,7 +6,7 @@ const char* get_field(char* line, int num)
     const char* split = ", ";
     for (tok = strtok(line, split); tok && *tok; tok = strtok(NULL,split))
     {
-        if (!--num)
+        if (!num--)
             return tok;
     }
     return NULL;
@@ -36,7 +36,6 @@ int get_julian_dates(celestial_t planet,float** julian_dates){
     while(fgets(line,512,stream)){
         const char *date_value = get_field(line,0);
         temp[i] = atof(date_value);
-        free(temp);
         i++;
     }
 
@@ -44,16 +43,17 @@ int get_julian_dates(celestial_t planet,float** julian_dates){
 }
 
 char* get_planet_filename(celestial_t planet){
+
     switch(planet){
-        case SUN: return "sun.csv";
-        case MERCURY: return "mercury.csv";
-        case VENUS: return "venus.csv";
-        case EARTH: return "earth.csv";
-        case MARS: return "mars.csv";
-        case JUPITER: return "jupiter.csv";
-        case SATURN: return "saturn.csv";
-        case URANUS: return "uranus.csv";
-        case NEPTUNE: return "neptune.csv";
-        case PLUTO: return "pluto.csv";
+        case SUN: return "./data/sun.csv";
+        case MERCURY: return "./data/mercury.csv";
+        case VENUS: return "./data/venus.csv";
+        case EARTH: return "./data/earth.csv";
+        case MARS: return "./data/mars.csv";
+        case JUPITER: return "./data/jupiter.csv";
+        case SATURN: return "./data/saturn.csv";
+        case URANUS: return "./data/uranus.csv";
+        case NEPTUNE: return "./data/neptune.csv";
+        case PLUTO: return "./data/pluto.csv";
     }
 }

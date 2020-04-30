@@ -15,13 +15,13 @@ int main() {
   sdata->data[8] = 0;
   sdata->data[9] = 10;
 
-  //run_simulation(sdata, INT_EULER, FORCE_NEWTONIAN, .1, 100);
+  // run_simulation(sdata, INT_EULER, FORCE_NEWTONIAN, .1, 100);
 
   float *julian_dates;
   int num_dates = get_julian_dates(SATURN,&julian_dates);
 
   for(int i = 0; i < num_dates; i++) {
-    printf("DATE - %f",julian_dates[i]);
+    printf("DATE - %f\n",julian_dates[i]);
   }
 
   return 0;
