@@ -5,15 +5,20 @@ NVCC = nvcc
 NVCCFLAGS = -Iinclude -O3 -lm
 GENCODE = -gencode=arch=compute_37,code=\"sm_37,compute_37\"
 
-BASE_SRCS := src/simulator/simdata.c src/simulator/solarsystemdata.c
+all: test-cpu test-gpu
 
-all: test-cpu
-
-test-cpu: $(BASE_SRCS) src/simulator/cpu/nbodysim.c src/test/test.c
+test-cpu: src/simulator/solarsystemdata.c src/simulator/cpu/nbodysim.c src/test/test.c
 	$(CC) -o bin/$@ $(CFLAGS) $^
 
-test-gpu: $(BASE_SRCS) src/simulator/gpu/nbodysim.c src/test/test.c
+test-gpu: src/simulator/solarsystemdata.o src/simulator/gpu/nbodysim.o src/test/test.o
 	$(NVCC) $(GENCODE) -o bin/$@ $(NVCCFLAGS) $^
 
+%.o: %.c
+	$(NVCC) $(GENCODE) -x cu $(NVCCFLAGS) -dc $< -o $@
+
+%.o: %.cu
+	$(NVCC) $(GENCODE) -x cu $(NVCCFLAGS) -dc $< -o $@
+
 clean:
-	rm -r bin/*
+	find . -name "*.o" -type f -delete
+	find bin/ -not -name '\.*' -type f -delete
