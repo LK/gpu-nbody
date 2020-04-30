@@ -3,8 +3,7 @@
 const char* get_field(char* line, int num)
 {
     const char* tok;
-    const char* split = ", ";
-    for (tok = strtok(line, split); tok && *tok; tok = strtok(NULL,split))
+    for (tok = strtok(line, ","); tok && *tok; tok = strtok(NULL,",\n"))
     {
         if (!num--)
             return tok;
@@ -38,12 +37,11 @@ int get_julian_dates(celestial_t planet,float** julian_dates){
         temp[i] = atof(date_value);
         i++;
     }
-
+    fclose(stream);
     return i;
 }
 
 char* get_planet_filename(celestial_t planet){
-
     switch(planet){
         case SUN: return "./data/sun.csv";
         case MERCURY: return "./data/mercury.csv";
@@ -56,4 +54,37 @@ char* get_planet_filename(celestial_t planet){
         case NEPTUNE: return "./data/neptune.csv";
         case PLUTO: return "./data/pluto.csv";
     }
+}
+
+float get_planet_mass(celestial_t planet){
+    switch(planet){
+        case SUN: return 332946;
+        case MERCURY: return 0.0553;
+        case VENUS: return 0.815;
+        case EARTH: return 1;
+        case MARS: return 0.107;
+        case JUPITER: return 317.8;
+        case SATURN: return 95.2;
+        case URANUS: return 14.5;
+        case NEPTUNE: return 17.1;
+        case PLUTO: return 0.0025;
+    }
+}
+
+void load_index_vectors(int index,float* position_dest,float* velocity_dest,celestial_t planet) {
+    FILE* stream = fopen(get_planet_filename(planet),"r");
+    char line[512];
+    for(int i = 0; i <= index;i++) fgets(line,512,stream);
+    char* tmp = strdup(line);
+    for(int i = 0; i < 3; i++){
+        char* tmp = strdup(line);
+        char* tmp2 = strdup(line);
+        const char* position = get_field(tmp,3 + i);
+        const char* velocity = get_field(tmp2,6 + i);
+        position_dest[i] = atof(position);
+        velocity_dest[i] = atof(velocity);
+        free(tmp);
+        free(tmp2);
+    }
+    fclose(stream);
 }
