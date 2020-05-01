@@ -21,7 +21,7 @@ int main() {
   simdata_free(sdata);
   // run_simulation(sdata, INT_EULER, FORCE_NEWTONIAN, .1, 100);
 
-  solar_system_test(SATURN);
+  solar_system_test(EARTH);
 
   return 0;
 }
@@ -30,7 +30,7 @@ void solar_system_test(celestial_t test_planet) {
   simdata_t *sdata = simdata_create(3, 1, 10);
 
   for(int i = 0; i < 10; i++) {
-    load_index_vectors(0,sdata->data + i*7,sdata->data + i*7 + 3,i);
+    load_index_vectors(0,simdata_pos_ptr(sdata, i),simdata_vel_ptr(sdata, i),i);
     sdata->data[i*7 + 6] = get_planet_mass(i);
   }
 
@@ -41,10 +41,10 @@ void solar_system_test(celestial_t test_planet) {
   float real_position[3], real_velocity[3];
   for(int i = 1; i < num_dates; i++) {
     julian_date_offset = julian_dates[i-1];
-    run_simulation(sdata, INT_EULER, FORCE_NEWTONIAN, SOLAR_DELTA_T, (int)((julian_dates[i] - julian_date_offset) * (1.0/SOLAR_DELTA_T)));
+    run_simulation(sdata, INT_LEAPFROG, FORCE_NEWTONIAN, SOLAR_DELTA_T, (int)((julian_dates[i] - julian_date_offset) * (1.0/SOLAR_DELTA_T)));
     load_index_vectors(i,real_position,real_velocity,test_planet);
 
-    printf("JULIAN DATE %f - POSITION ERROR = %f --- VELOCITY ERROR = %f\n", julian_dates[i],relative_error(sdata->data + test_planet*7,real_position,3),relative_error(sdata->data + test_planet*7+3,real_velocity,3));
+    printf("YEAR %d - POSITION ERROR = %f --- VELOCITY ERROR = %f\n", i,relative_error(simdata_pos_ptr(sdata, test_planet),real_position,3),relative_error(simdata_vel_ptr(sdata, test_planet),real_velocity,3));
   }
   free(julian_dates);
   simdata_free(sdata);

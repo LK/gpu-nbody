@@ -12,7 +12,7 @@ float *simdata_pos_ptr(simdata_t *sdata, unsigned int idx);
 float *simdata_vel_ptr(simdata_t *sdata, unsigned int idx);
 float *simdata_feat_ptr(simdata_t *sdata, unsigned int idx);
 
-typedef enum integrator_t { INT_EULER = 0 } integrator_t;
+typedef enum integrator_t { INT_EULER = 0, INT_LEAPFROG = 1 } integrator_t;
 typedef enum force_t { FORCE_NEWTONIAN = 0 } force_t;
 
 void run_simulation(simdata_t *data, integrator_t int_type, force_t force_type,
