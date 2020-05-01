@@ -1,19 +1,33 @@
 CC = gcc
-CFLAGS = -Iinclude -O3 -std=c99 -lm
+CFLAGS = -Iinclude -O3 -std=gnu99 -lm
 
 NVCC = nvcc
 NVCCFLAGS = -Iinclude -O3 -lm
 GENCODE = -gencode=arch=compute_37,code=\"sm_37,compute_37\"
 
-BASE_SRCS := src/simulator/simdata.c src/simulator/solarsystemdata.c
+TEST_SIMPLE_SRCS := src/test/test-simple.c
+TEST_CELESTIAL_SRCS := src/test/test-celestial.c src/simulator/solarsystemdata.c
 
-all: test-cpu
+all: test-simple-cpu test-simple-gpu test-celestial-cpu test-celestial-gpu
 
-test-cpu: $(BASE_SRCS) src/simulator/cpu/nbodysim.c src/test/test.c
+test-simple-cpu: $(TEST_SIMPLE_SRCS) src/simulator/cpu/nbodysim.c
 	$(CC) -o bin/$@ $(CFLAGS) $^
 
-test-gpu: $(BASE_SRCS) src/simulator/gpu/nbodysim.c src/test/test.c
+test-celestial-cpu: $(TEST_CELESTIAL_SRCS) src/simulator/cpu/nbodysim.c
+	$(CC) -o bin/$@ $(CFLAGS) $^
+
+test-simple-gpu: $(patsubst %.c,%.o,$(TEST_SIMPLE_SRCS)) src/simulator/gpu/nbodysim.o
 	$(NVCC) $(GENCODE) -o bin/$@ $(NVCCFLAGS) $^
 
+test-celestial-gpu: $(patsubst %.c,%.o,$(TEST_CELESTIAL_SRCS)) src/simulator/gpu/nbodysim.o
+	$(NVCC) $(GENCODE) -o bin/$@ $(NVCCFLAGS) $^
+
+%.o: %.c
+	$(NVCC) $(GENCODE) -x cu $(NVCCFLAGS) -dc $< -o $@
+
+%.o: %.cu
+	$(NVCC) $(GENCODE) -x cu $(NVCCFLAGS) -dc $< -o $@
+
 clean:
-	rm -r bin/*
+	find . -name "*.o" -type f -delete
+	find bin/ -not -name '\.*' -type f -delete
