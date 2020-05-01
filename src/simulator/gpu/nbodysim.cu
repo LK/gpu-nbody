@@ -6,9 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#define G (6.673 * pow(10, -11))
-#define G 1
-
 __device__ void compute_force(float *d_force, float *d_position,
                               float *d_features, float *d_positionActor,
                               float *d_featuresActor, simdata_t *d_sdata) {
@@ -38,9 +35,9 @@ __device__ void compute_force(float *d_force, float *d_position,
 
 __global__ void integrator(simdata_t *d_sdata, float *d_acceleration,
                            float time_step) {
-  float *d_pos = simdata_pos_ptr(d_sdata, blockIdx.x);
-  float *d_vel = simdata_vel_ptr(d_sdata, blockIdx.x);
-  float *d_accel = d_acceleration + d_sdata->posdim * blockIdx.x;
+  float *d_pos = simdata_pos_ptr(d_sdata, threadIdx.x);
+  float *d_vel = simdata_vel_ptr(d_sdata, threadIdx.x);
+  float *d_accel = d_acceleration + d_sdata->posdim * threadIdx.x;
   for (int i = 0; i < d_sdata->posdim; i++) {
     d_pos[i] += d_vel[i] * time_step + 0.5 * d_accel[i] * time_step * time_step;
     d_vel[i] += d_accel[i] * time_step;
@@ -81,13 +78,15 @@ void simdata_copy_gpu_cpu(simdata_t *d_sdata, simdata_t *sdata) {
 }
 
 void simdata_gpu_free(simdata_t *d_sdata) {
-  cudaFree(d_sdata->data);
+  simdata_t copy;
+  cudaMemcpy(&copy, d_sdata, sizeof(simdata_t), cudaMemcpyDeviceToHost);
   cudaFree(d_sdata);
+  cudaFree(copy.data);
 }
 
 __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
-                                     force_t force_type) {
-  int particleIdx = blockIdx.x;
+                                     force_t force_type, float multiplier) {
+  int particleIdx = threadIdx.x;
   float *d_position = simdata_pos_ptr(d_sdata, particleIdx);
   float *d_features = simdata_feat_ptr(d_sdata, particleIdx);
 
@@ -102,23 +101,27 @@ __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
   }
 
   for (int j = 0; j < d_sdata->posdim; j++) {
-    d_accel[particleIdx * d_sdata->posdim + j] *= G / d_features[0];
+    d_accel[particleIdx * d_sdata->posdim + j] *= multiplier / d_features[0];
   }
 }
 
 __host__ void run_simulation(simdata_t *sdata, integrator_t int_type,
-                             force_t force_type, float time_step, int steps) {
+                             force_t force_type, simulator_mode_t mode,
+                             float time_step, int steps) {
   simdata_t *d_sdata = simdata_clone_cpu_gpu(sdata);
   float *d_accel;
   cudaMalloc(&d_accel, sizeof(float) * sdata->posdim * sdata->nparticles);
   for (int step = 0; step < steps; step++) {
     cudaMemset(&d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
 
-    compute_acceleration<<<sdata->nparticles, 1>>>(d_sdata, d_accel,
-                                                   force_type);
+    compute_acceleration<<<1, sdata->nparticles>>>(d_sdata, d_accel,
+                                                   force_type,
+                                                   get_multiplier(mode));
 
-    integrator<<<sdata->nparticles, 1>>>(d_sdata, d_accel, time_step);
-    simdata_copy_gpu_cpu(d_sdata, sdata);
-    dump(sdata, step);
+    integrator<<<1, sdata->nparticles>>>(d_sdata, d_accel, time_step);
   }
+
+  simdata_copy_gpu_cpu(d_sdata, sdata);
+  simdata_gpu_free(d_sdata);
+  cudaFree(d_accel);
 }

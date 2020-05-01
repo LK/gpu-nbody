@@ -1,16 +1,25 @@
 CC = gcc
-CFLAGS = -Iinclude -O3 -std=c99 -lm
+CFLAGS = -Iinclude -O3 -std=gnu99 -lm
 
 NVCC = nvcc
 NVCCFLAGS = -Iinclude -O3 -lm
 GENCODE = -gencode=arch=compute_37,code=\"sm_37,compute_37\"
 
-all: test-cpu test-gpu
+TEST_SIMPLE_SRCS := src/test/test-simple.c
+TEST_CELESTIAL_SRCS := src/test/test-celestial.c src/simulator/solarsystemdata.c
 
-test-cpu: src/simulator/solarsystemdata.c src/simulator/cpu/nbodysim.c src/test/test.c
+all: test-simple-cpu test-simple-gpu test-celestial-cpu test-celestial-gpu
+
+test-simple-cpu: $(TEST_SIMPLE_SRCS) src/simulator/cpu/nbodysim.c
 	$(CC) -o bin/$@ $(CFLAGS) $^
 
-test-gpu: src/simulator/solarsystemdata.o src/simulator/gpu/nbodysim.o src/test/test.o
+test-celestial-cpu: $(TEST_CELESTIAL_SRCS) src/simulator/cpu/nbodysim.c
+	$(CC) -o bin/$@ $(CFLAGS) $^
+
+test-simple-gpu: $(patsubst %.c,%.o,$(TEST_SIMPLE_SRCS)) src/simulator/gpu/nbodysim.o
+	$(NVCC) $(GENCODE) -o bin/$@ $(NVCCFLAGS) $^
+
+test-celestial-gpu: $(patsubst %.c,%.o,$(TEST_CELESTIAL_SRCS)) src/simulator/gpu/nbodysim.o
 	$(NVCC) $(GENCODE) -o bin/$@ $(NVCCFLAGS) $^
 
 %.o: %.c
