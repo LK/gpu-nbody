@@ -4,9 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#define G (6.673 * pow(10, -11))
-#define G (6.673 * pow(10, -11) * 13.3153474)
-
 void getForce(float *force, float *position, float *features,
               float *positionActor, float *featuresActor, simdata_t *sdata) {
 
@@ -82,7 +79,7 @@ void dump(simdata_t *sdata, int step) {
 }
 
 void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
-                    float time_step, int steps) {
+                    simulator_mode_t mode, float time_step, int steps) {
   float *accelerations =
       (float *)malloc(sizeof(float) * sdata->posdim * sdata->nparticles);
   for (int step = 0; step < steps; step++) {
@@ -113,7 +110,7 @@ void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
                  sdata);
       }
       for (int j = 0; j < sdata->posdim; j++) {
-        acceleration[j] = acceleration[j] * G / features[0];
+        acceleration[j] = acceleration[j] * get_multiplier(mode) / features[0];
       }
     }
 
@@ -124,7 +121,6 @@ void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
       default:
         euler_part2(accelerations,time_step,sdata);
     }
-    // dump(sdata, step);
   }
   free(accelerations);
 }
