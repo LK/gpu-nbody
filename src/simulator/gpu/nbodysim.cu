@@ -58,7 +58,7 @@ __host__ void dump(simdata_t *sdata, int step) {
   }
 }
 
-simdata_t *simdata_copy_cpu_gpu(simdata_t *sdata) {
+simdata_t *simdata_clone_cpu_gpu(simdata_t *sdata) {
   simdata_t *d_sdata;
   float *d_sdata_data;
   cudaMalloc(&d_sdata, sizeof(simdata_t));
@@ -108,7 +108,7 @@ __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
 
 __host__ void run_simulation(simdata_t *sdata, integrator_t int_type,
                              force_t force_type, float time_step, int steps) {
-  simdata_t *d_sdata = simdata_copy_cpu_gpu(sdata);
+  simdata_t *d_sdata = simdata_clone_cpu_gpu(sdata);
   float *d_accel;
   cudaMalloc(&d_accel, sizeof(float) * sdata->posdim * sdata->nparticles);
   for (int step = 0; step < steps; step++) {
