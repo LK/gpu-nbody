@@ -30,26 +30,26 @@ void getForce(float *force, float *position, float *features,
   }
 }
 
-void leapfrog_part1(float timeStep, simdata_t *sdata) {
-  float *position, *velocity;
-  for(int i = 0; i < sdata->nparticles; i++) {
-    position = simdata_pos_ptr(sdata, i);
-    velocity = simdata_vel_ptr(sdata, i);
-    for(int j = 0; j < sdata->posdim; j++){
-      position[j] += 0.5 * timeStep * velocity[j];
-    }
-  }
-}
-
-void leapfrog_part2(float* accelerations, float timeStep, simdata_t *sdata) {
-  float *position, *velocity,*acceleration;
+void leapfrog_part1(float* accelerations, float timeStep, simdata_t *sdata) {
+  float *position, *velocity, *acceleration;
   for(int i = 0; i < sdata->nparticles; i++) {
     position = simdata_pos_ptr(sdata, i);
     velocity = simdata_vel_ptr(sdata, i);
     acceleration = accelerations + i * sdata->posdim;
     for(int j = 0; j < sdata->posdim; j++){
-      velocity[j] += timeStep * acceleration[j];
-      position[j] += 0.5 * timeStep * velocity[j];
+      velocity[j] += acceleration[j] * timeStep * 0.5;
+      position[j] += timeStep * velocity[j];
+    }
+  }
+}
+
+void leapfrog_part2(float* accelerations, float timeStep, simdata_t *sdata) {
+  float *velocity,*acceleration;
+  for(int i = 0; i < sdata->nparticles; i++) {
+    velocity = simdata_vel_ptr(sdata, i);
+    acceleration = accelerations + i * sdata->posdim;
+    for(int j = 0; j < sdata->posdim; j++){
+      velocity[j] += timeStep * acceleration[j] * 0.5;
     }
   }
 }
@@ -82,11 +82,12 @@ void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
                     simulator_mode_t mode, float time_step, int steps) {
   float *accelerations =
       (float *)malloc(sizeof(float) * sdata->posdim * sdata->nparticles);
+  memset(accelerations, 0, sdata->posdim * sdata->nparticles * sizeof(float));
   for (int step = 0; step < steps; step++) {
 
     switch(int_type) {
       case INT_LEAPFROG:
-        leapfrog_part1(time_step,sdata);
+        leapfrog_part1(accelerations,time_step,sdata);
         break;
       default:
         break;

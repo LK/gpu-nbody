@@ -44,8 +44,8 @@ void solar_system_test(celestial_t test_planet) {
         (int)((julian_dates[i] - julian_date_offset) * (1.0 / SOLAR_DELTA_T)));
     load_index_vectors(i, real_position, real_velocity, test_planet);
 
-    printf("JULIAN DATE %f - POSITION ERROR = %f --- VELOCITY ERROR = %f\n",
-           julian_dates[i],
+    printf("YEAR %d - POSITION ERROR = %f --- VELOCITY ERROR = %f\n",
+           i,
            relative_error(sdata->data + test_planet * 7, real_position, 3),
            relative_error(sdata->data + test_planet * 7 + 3, real_velocity, 3));
   }
