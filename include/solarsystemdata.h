@@ -7,17 +7,17 @@
 
 const char *get_field(char *line, int num);
 
-typedef enum celestial_t {
-  SUN,
-  MERCURY,
-  VENUS,
-  EARTH,
-  MARS,
-  JUPITER,
-  SATURN,
-  URANUS,
-  NEPTUNE,
-  PLUTO
+typedef enum celestial_t { 	
+	SUN = 0, 
+	MERCURY = 1,
+	VENUS = 2,
+	EARTH = 3,
+	MARS = 4,
+	JUPITER = 5,
+	SATURN = 6,
+	URANUS = 7,
+	NEPTUNE = 8,
+	PLUTO = 9
 } celestial_t;
 
 const char *get_planet_filename(celestial_t planet);

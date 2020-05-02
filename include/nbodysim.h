@@ -53,7 +53,7 @@ __host__ __device__ inline void simdata_free(simdata_t *sdata) {
   free(sdata);
 }
 
-typedef enum integrator_t { INT_EULER = 0 } integrator_t;
+typedef enum integrator_t { INT_EULER = 0, INT_LEAPFROG = 1 } integrator_t;
 typedef enum force_t { FORCE_NEWTONIAN = 0 } force_t;
 typedef enum simulator_mode_t {
   MODE_SIMPLE = 0,

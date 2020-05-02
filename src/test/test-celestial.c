@@ -40,7 +40,7 @@ void solar_system_test(celestial_t test_planet) {
   for (int i = 1; i < num_dates; i++) {
     julian_date_offset = julian_dates[i - 1];
     run_simulation(
-        sdata, INT_EULER, FORCE_NEWTONIAN, MODE_CELESTIAL, SOLAR_DELTA_T,
+        sdata, INT_LEAPFROG, FORCE_NEWTONIAN, MODE_CELESTIAL, SOLAR_DELTA_T,
         (int)((julian_dates[i] - julian_date_offset) * (1.0 / SOLAR_DELTA_T)));
     load_index_vectors(i, real_position, real_velocity, test_planet);
 
