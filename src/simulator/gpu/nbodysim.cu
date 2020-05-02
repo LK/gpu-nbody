@@ -1,4 +1,5 @@
 #include "nbodysim.h"
+#include "integrators.cu"
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <math.h>
@@ -30,17 +31,6 @@ __device__ void compute_force(float *d_force, float *d_position,
     float f =
         feature * featureActor / distance / distance * deltaPos / distance;
     d_force[i] -= f;
-  }
-}
-
-__global__ void integrator(simdata_t *d_sdata, float *d_acceleration,
-                           float time_step) {
-  float *d_pos = simdata_pos_ptr(d_sdata, threadIdx.x);
-  float *d_vel = simdata_vel_ptr(d_sdata, threadIdx.x);
-  float *d_accel = d_acceleration + d_sdata->posdim * threadIdx.x;
-  for (int i = 0; i < d_sdata->posdim; i++) {
-    d_pos[i] += d_vel[i] * time_step + 0.5 * d_accel[i] * time_step * time_step;
-    d_vel[i] += d_accel[i] * time_step;
   }
 }
 
@@ -114,11 +104,24 @@ __host__ void run_simulation(simdata_t *sdata, integrator_t int_type,
   for (int step = 0; step < steps; step++) {
     cudaMemset(&d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
 
+    if (int_type == INT_LEAPFROG) {
+        leapfrog_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel,
+            time_step, true);
+    }
+
     compute_acceleration<<<1, sdata->nparticles>>>(d_sdata, d_accel,
                                                    force_type,
                                                    get_multiplier(mode));
 
-    integrator<<<1, sdata->nparticles>>>(d_sdata, d_accel, time_step);
+    switch (int_type) {
+      case INT_EULER:
+        euler_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel, time_step);
+        break;
+      case INT_LEAPFROG:
+        leapfrog_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel,
+            time_step, false);
+        break;
+    }
   }
 
   simdata_copy_gpu_cpu(d_sdata, sdata);
