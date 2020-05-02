@@ -57,13 +57,15 @@ typedef enum integrator_t { INT_EULER = 0, INT_LEAPFROG = 1 } integrator_t;
 typedef enum force_t { FORCE_NEWTONIAN = 0 } force_t;
 typedef enum simulator_mode_t {
   MODE_SIMPLE = 0,
-  MODE_CELESTIAL
+  MODE_CELESTIAL,
+  MODE_GALAXY,
 } simulator_mode_t;
 
 __host__ __device__ inline float get_multiplier(simulator_mode_t mode) {
   switch (mode) {
   case MODE_CELESTIAL:
     return (6.673 * pow(10, -11) * 13.3153474);
+  case MODE_GALAXY:
   default:
     return 1;
   }
