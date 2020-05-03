@@ -26,8 +26,9 @@ int main() {
   sdata->data[7] = 0;
   sdata->data[8] = 0;
   sdata->data[9] = 10;
+  simconfig_t sconfig = {.precompute = false};
   measure_t *timer = start_timer();
-  run_simulation(sdata, INT_EULER, FORCE_NEWTONIAN_SIMPLE, .1, 100);
+  run_simulation(sdata, &sconfig, INT_EULER, FORCE_NEWTONIAN_SIMPLE, .1, 100);
   double runtime = end_timer(timer);
   dumpt(sdata, 1);
   printf("RUNTIME: %f\n", runtime);

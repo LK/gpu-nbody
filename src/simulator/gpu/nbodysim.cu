@@ -78,19 +78,22 @@ __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
   }
 }
 
-__host__ void run_simulation(simdata_t *sdata, integrator_t int_type,
-                             force_t force_type, float time_step, int steps) {
+__host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
+                             integrator_t int_type, force_t force_type,
+                             float time_step, int steps) {
   simdata_t *d_sdata = simdata_clone_cpu_gpu(sdata);
   float *d_accel;
   cudaMalloc(&d_accel, sizeof(float) * sdata->posdim * sdata->nparticles);
   cudaMemset(d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
 
-  float *aux;
-  switch (force_type) {
-  case FORCE_NEWTONIAN:
-  case FORCE_NEWTONIAN_SIMPLE:
-    aux = newtonian_precompute(d_sdata, sdata->nparticles);
-    break;
+  float *aux = NULL;
+  if (sconfig->precompute) {
+    switch (force_type) {
+    case FORCE_NEWTONIAN:
+    case FORCE_NEWTONIAN_SIMPLE:
+      aux = newtonian_precompute(d_sdata, sdata->nparticles);
+      break;
+    }
   }
 
   for (int step = 0; step < steps; step++) {
@@ -120,4 +123,5 @@ __host__ void run_simulation(simdata_t *sdata, integrator_t int_type,
   simdata_copy_gpu_cpu(d_sdata, sdata);
   simdata_gpu_free(d_sdata);
   cudaFree(d_accel);
+  if (aux) cudaFree(aux);
 }

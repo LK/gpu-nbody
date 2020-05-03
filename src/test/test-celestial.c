@@ -36,11 +36,12 @@ void solar_system_test(celestial_t test_planet) {
 
   float julian_date_offset;
   float real_position[3], real_velocity[3];
+  simconfig_t sconfig = {.precompute = false};
 
   for (int i = 1; i < num_dates; i++) {
     julian_date_offset = julian_dates[i - 1];
     run_simulation(
-        sdata, INT_LEAPFROG, FORCE_NEWTONIAN, SOLAR_DELTA_T,
+        sdata, &sconfig, INT_LEAPFROG, FORCE_NEWTONIAN, SOLAR_DELTA_T,
         (int)((julian_dates[i] - julian_date_offset) * (1.0 / SOLAR_DELTA_T)));
     load_index_vectors(i, real_position, real_velocity, test_planet);
 

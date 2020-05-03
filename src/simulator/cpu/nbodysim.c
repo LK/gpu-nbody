@@ -79,8 +79,9 @@ void dump(simdata_t *sdata, int step) {
   }
 }
 
-void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
-                    float time_step, int steps) {
+void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
+                    integrator_t int_type, force_t force_type, float time_step,
+                    int steps) {
   float *accelerations =
       (float *)malloc(sizeof(float) * sdata->posdim * sdata->nparticles);
   memset(accelerations, 0, sdata->posdim * sdata->nparticles * sizeof(float));

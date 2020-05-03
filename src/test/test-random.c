@@ -26,9 +26,11 @@ int main() {
       vel[j] = ((float)rand() / RAND_MAX - 0.5f) * 10.0f;
     }
   }
+  simconfig_t sconfig = {.precompute = false};
 
   measure_t *timer = start_timer();
-  run_simulation(sdata, INT_LEAPFROG, FORCE_NEWTONIAN_SIMPLE, .1, 1000);
+  run_simulation(sdata, &sconfig, INT_LEAPFROG, FORCE_NEWTONIAN_SIMPLE, .1,
+                 1000);
   double runtime = end_timer(timer);
   dumpt(sdata, 1);
   printf("RUNTIME: %f\n", runtime);

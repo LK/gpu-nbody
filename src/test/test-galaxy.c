@@ -79,7 +79,9 @@ int main(int argc, char **argv) {
   if (argc > 1)
     steps = atoi(argv[1]);
 
-  run_simulation(sdata, INT_LEAPFROG, FORCE_NEWTONIAN_SIMPLE, TIME_STEP, steps);
+  simconfig_t sconfig = {.precompute = false};
+  run_simulation(sdata, &sconfig, INT_LEAPFROG, FORCE_NEWTONIAN_SIMPLE,
+                 TIME_STEP, steps);
 
   simdata_free(sdata);
 

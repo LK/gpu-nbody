@@ -36,8 +36,10 @@ __device__ void newtonian_compute(
     float posActor = d_positionActor[i];
     float deltaPos = pos - posActor;
 
-    float f = aux[particleA * d_sdata->nparticles + particleB] / distance
-      / distance * deltaPos / distance;
+    float massTerm = aux ? aux[particleA * d_sdata->nparticles + particleB] :
+      d_features[0] * d_featuresActor[0];
+
+    float f = massTerm / distance / distance * deltaPos / distance;
     d_force[i] -= f;
   }
 }
