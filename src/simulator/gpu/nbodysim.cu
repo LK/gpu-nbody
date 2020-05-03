@@ -101,12 +101,15 @@ __host__ void run_simulation(simdata_t *sdata, integrator_t int_type,
   simdata_t *d_sdata = simdata_clone_cpu_gpu(sdata);
   float *d_accel;
   cudaMalloc(&d_accel, sizeof(float) * sdata->posdim * sdata->nparticles);
+  cudaMemset(d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
   for (int step = 0; step < steps; step++) {
-    cudaMemset(&d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
-
     if (int_type == INT_LEAPFROG) {
         leapfrog_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel,
             time_step, true);
+    }
+
+    if (step > 0) {
+      cudaMemset(d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
     }
 
     compute_acceleration<<<1, sdata->nparticles>>>(d_sdata, d_accel,

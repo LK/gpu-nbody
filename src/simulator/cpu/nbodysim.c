@@ -30,38 +30,39 @@ void getForce(float *force, float *position, float *features,
   }
 }
 
-void leapfrog_part1(float* accelerations, float timeStep, simdata_t *sdata) {
+void leapfrog_part1(float *accelerations, float timeStep, simdata_t *sdata) {
   float *position, *velocity, *acceleration;
-  for(int i = 0; i < sdata->nparticles; i++) {
+  for (int i = 0; i < sdata->nparticles; i++) {
     position = simdata_pos_ptr(sdata, i);
     velocity = simdata_vel_ptr(sdata, i);
     acceleration = accelerations + i * sdata->posdim;
-    for(int j = 0; j < sdata->posdim; j++){
+    for (int j = 0; j < sdata->posdim; j++) {
       velocity[j] += acceleration[j] * timeStep * 0.5;
       position[j] += timeStep * velocity[j];
     }
   }
 }
 
-void leapfrog_part2(float* accelerations, float timeStep, simdata_t *sdata) {
-  float *velocity,*acceleration;
-  for(int i = 0; i < sdata->nparticles; i++) {
+void leapfrog_part2(float *accelerations, float timeStep, simdata_t *sdata) {
+  float *velocity, *acceleration;
+  for (int i = 0; i < sdata->nparticles; i++) {
     velocity = simdata_vel_ptr(sdata, i);
     acceleration = accelerations + i * sdata->posdim;
-    for(int j = 0; j < sdata->posdim; j++){
+    for (int j = 0; j < sdata->posdim; j++) {
       velocity[j] += timeStep * acceleration[j] * 0.5;
     }
   }
 }
 
 void euler_part2(float *accelerations, float timeStep, simdata_t *sdata) {
-  float *position, *velocity,*acceleration;
+  float *position, *velocity, *acceleration;
   for (int j = 0; j < sdata->nparticles; j++) {
     position = simdata_pos_ptr(sdata, j);
     velocity = simdata_vel_ptr(sdata, j);
     acceleration = accelerations + j * sdata->posdim;
     for (int i = 0; i < sdata->posdim; i++) {
-      position[i] += velocity[i] * timeStep + 0.5 * acceleration[i] * timeStep * timeStep;
+      position[i] +=
+          velocity[i] * timeStep + 0.5 * acceleration[i] * timeStep * timeStep;
       velocity[i] += acceleration[i] * timeStep;
     }
   }
@@ -73,8 +74,8 @@ void dump(simdata_t *sdata, int step) {
   for (int i = 0; i < sdata->nparticles; i++) {
     pos = simdata_pos_ptr(sdata, i);
     vel = simdata_vel_ptr(sdata, i);
-    printf("\t(%.04f, %.04f,%.04f)\t(%.04f, %.04f,%.04f)\n", pos[0], pos[1], pos[2], vel[0],
-           vel[1],vel[2]);
+    printf("\t(%.04f, %.04f,%.04f)\t(%.04f, %.04f,%.04f)\n", pos[0], pos[1],
+           pos[2], vel[0], vel[1], vel[2]);
   }
 }
 
@@ -85,14 +86,13 @@ void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
   memset(accelerations, 0, sdata->posdim * sdata->nparticles * sizeof(float));
   for (int step = 0; step < steps; step++) {
 
-    switch(int_type) {
-      case INT_LEAPFROG:
-        leapfrog_part1(accelerations,time_step,sdata);
-        break;
-      default:
-        break;
+    switch (int_type) {
+    case INT_LEAPFROG:
+      leapfrog_part1(accelerations, time_step, sdata);
+      break;
+    default:
+      break;
     }
-
 
     for (int i = 0; i < sdata->nparticles; i++) {
       float *acceleration = &accelerations[i * sdata->posdim];
@@ -115,12 +115,12 @@ void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
       }
     }
 
-    switch(int_type){
-      case INT_LEAPFROG:
-        leapfrog_part2(accelerations,time_step,sdata);
-        break;
-      default:
-        euler_part2(accelerations,time_step,sdata);
+    switch (int_type) {
+    case INT_LEAPFROG:
+      leapfrog_part2(accelerations, time_step, sdata);
+      break;
+    default:
+      euler_part2(accelerations, time_step, sdata);
     }
   }
   free(accelerations);
