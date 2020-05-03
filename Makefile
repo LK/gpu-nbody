@@ -5,16 +5,20 @@ NVCC = nvcc
 NVCCFLAGS = -Iinclude -O3 -lm
 GENCODE = -gencode=arch=compute_37,code=\"sm_37,compute_37\"
 
-TEST_SIMPLE_SRCS := src/test/test-simple.c
-TEST_RANDOM_SRCS := src/test/test-random.c
-TEST_CELESTIAL_SRCS := src/test/test-celestial.c src/simulator/solarsystemdata.c
-TEST_GALAXY_SRCS := src/test/test-galaxy.c
+BASE_SRCS := src/test/timing.c
+TEST_SIMPLE_SRCS := $(BASE_SRCS) src/test/test-simple.c
+TEST_RANDOM_SRCS := $(BASE_SRCS) src/test/test-random.c
+TEST_CELESTIAL_SRCS := $(BASE_SRCS) src/test/test-celestial.c src/simulator/solarsystemdata.c
+TEST_GALAXY_SRCS := $(BASE_SRCS) src/test/test-galaxy.c
 
-all: test-simple-cpu test-simple-gpu test-random-cpu test-random-gpu test-celestial-cpu test-celestial-gpu test-galaxy-cpu test-galaxy-gpu
+CPU_EXECUTABLES := test-simple-cpu test-random-cpu test-celestial-cpu test-galaxy-cpu
+GPU_EXECUTABLES := test-simple-gpu test-random-gpu test-celestial-gpu test-galaxy-gpu
 
-cpu: test-simple-cpu test-random-cpu test-celestial-cpu test-galaxy-cpu
+all: $(CPU_EXECUTABLES) $(GPU_EXECUTABLES)
 
-gpu: test-simple-gpu test-random-gpu test-celestial-gpu test-galaxy-gpu
+cpu: $(CPU_EXECUTABLES)
+
+gpu: $(GPU_EXECUTABLES)
 
 test-simple-cpu: $(TEST_SIMPLE_SRCS) src/simulator/cpu/nbodysim.c
 	$(CC) -o bin/$@ $(CFLAGS) $^

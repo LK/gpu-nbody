@@ -94,9 +94,12 @@ void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
       break;
     }
 
+    if (step > 0) {
+      memset(accelerations, 0,
+             sizeof(float) * sdata->posdim * sdata->nparticles);
+    }
     for (int i = 0; i < sdata->nparticles; i++) {
       float *acceleration = &accelerations[i * sdata->posdim];
-      memset(acceleration, 0, sdata->posdim * sizeof(float));
 
       float *position = simdata_pos_ptr(sdata, i);
       float *features = simdata_feat_ptr(sdata, i);

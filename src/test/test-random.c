@@ -1,4 +1,5 @@
 #include "nbodysim.h"
+#include "timing.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -26,8 +27,11 @@ int main() {
     }
   }
 
-  run_simulation(sdata, INT_EULER, FORCE_NEWTONIAN, MODE_SIMPLE, .1, 1000);
+  measure_t *timer = start_timer();
+  run_simulation(sdata, INT_LEAPFROG, FORCE_NEWTONIAN, MODE_SIMPLE, .1, 1000);
+  double runtime = end_timer(timer);
   dumpt(sdata, 1);
+  printf("RUNTIME: %f\n", runtime);
   simdata_free(sdata);
 
   return 0;
