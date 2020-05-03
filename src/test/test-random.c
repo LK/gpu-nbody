@@ -28,7 +28,7 @@ int main() {
   }
 
   measure_t *timer = start_timer();
-  run_simulation(sdata, INT_LEAPFROG, FORCE_NEWTONIAN, MODE_SIMPLE, .1, 1000);
+  run_simulation(sdata, INT_LEAPFROG, FORCE_NEWTONIAN_SIMPLE, .1, 1000);
   double runtime = end_timer(timer);
   dumpt(sdata, 1);
   printf("RUNTIME: %f\n", runtime);

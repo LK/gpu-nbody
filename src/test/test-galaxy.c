@@ -79,8 +79,7 @@ int main(int argc, char **argv) {
   if (argc > 1)
     steps = atoi(argv[1]);
 
-  run_simulation(sdata, INT_LEAPFROG, FORCE_NEWTONIAN, MODE_GALAXY, TIME_STEP,
-                 steps);
+  run_simulation(sdata, INT_LEAPFROG, FORCE_NEWTONIAN_SIMPLE, TIME_STEP, steps);
 
   simdata_free(sdata);
 

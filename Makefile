@@ -14,34 +14,37 @@ TEST_GALAXY_SRCS := $(BASE_SRCS) src/test/test-galaxy.c
 CPU_EXECUTABLES := test-simple-cpu test-random-cpu test-celestial-cpu test-galaxy-cpu
 GPU_EXECUTABLES := test-simple-gpu test-random-gpu test-celestial-gpu test-galaxy-gpu
 
+CPU_SRCS := src/simulator/cpu/nbodysim.c
+GPU_SRCS := src/simulator/gpu/nbodysim.o
+
 all: $(CPU_EXECUTABLES) $(GPU_EXECUTABLES)
 
 cpu: $(CPU_EXECUTABLES)
 
 gpu: $(GPU_EXECUTABLES)
 
-test-simple-cpu: $(TEST_SIMPLE_SRCS) src/simulator/cpu/nbodysim.c
+test-simple-cpu: $(TEST_SIMPLE_SRCS) $(CPU_SRCS)
 	$(CC) -o bin/$@ $(CFLAGS) $^
 
-test-random-cpu: $(TEST_RANDOM_SRCS) src/simulator/cpu/nbodysim.c
+test-random-cpu: $(TEST_RANDOM_SRCS) $(CPU_SRCS)
 	$(CC) -o bin/$@ $(CFLAGS) $^
 
-test-celestial-cpu: $(TEST_CELESTIAL_SRCS) src/simulator/cpu/nbodysim.c
+test-celestial-cpu: $(TEST_CELESTIAL_SRCS) $(CPU_SRCS)
 	$(CC) -o bin/$@ $(CFLAGS) $^
 
-test-galaxy-cpu: $(TEST_GALAXY_SRCS) src/simulator/cpu/nbodysim.c
+test-galaxy-cpu: $(TEST_GALAXY_SRCS) $(CPU_SRCS)
 	$(CC) -o bin/$@ $(CFLAGS) $^
 
-test-simple-gpu: $(patsubst %.c,%.o,$(TEST_SIMPLE_SRCS)) src/simulator/gpu/nbodysim.o
+test-simple-gpu: $(patsubst %.c,%.o,$(TEST_SIMPLE_SRCS)) $(GPU_SRCS)
 	$(NVCC) $(GENCODE) -o bin/$@ $(NVCCFLAGS) $^
 
-test-random-gpu: $(patsubst %.c,%.o,$(TEST_RANDOM_SRCS)) src/simulator/gpu/nbodysim.o
+test-random-gpu: $(patsubst %.c,%.o,$(TEST_RANDOM_SRCS)) $(GPU_SRCS)
 	$(NVCC) $(GENCODE) -o bin/$@ $(NVCCFLAGS) $^
 
-test-celestial-gpu: $(patsubst %.c,%.o,$(TEST_CELESTIAL_SRCS)) src/simulator/gpu/nbodysim.o
+test-celestial-gpu: $(patsubst %.c,%.o,$(TEST_CELESTIAL_SRCS)) $(GPU_SRCS)
 	$(NVCC) $(GENCODE) -o bin/$@ $(NVCCFLAGS) $^
 
-test-galaxy-gpu: $(patsubst %.c,%.o,$(TEST_GALAXY_SRCS)) src/simulator/gpu/nbodysim.o
+test-galaxy-gpu: $(patsubst %.c,%.o,$(TEST_GALAXY_SRCS)) $(GPU_SRCS)
 	$(NVCC) $(GENCODE) -o bin/$@ $(NVCCFLAGS) $^
 
 %.o: %.c

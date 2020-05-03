@@ -80,7 +80,7 @@ void dump(simdata_t *sdata, int step) {
 }
 
 void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
-                    simulator_mode_t mode, float time_step, int steps) {
+                    float time_step, int steps) {
   float *accelerations =
       (float *)malloc(sizeof(float) * sdata->posdim * sdata->nparticles);
   memset(accelerations, 0, sdata->posdim * sdata->nparticles * sizeof(float));
@@ -114,7 +114,15 @@ void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
                  sdata);
       }
       for (int j = 0; j < sdata->posdim; j++) {
-        acceleration[j] = acceleration[j] * get_multiplier(mode) / features[0];
+        switch (force_type) {
+        case FORCE_NEWTONIAN:
+          acceleration[j] = acceleration[j] *
+                            (6.673 * pow(10, -11) * 13.3153474) / features[0];
+          break;
+        case FORCE_NEWTONIAN_SIMPLE:
+          acceleration[j] = acceleration[j] / features[0];
+          break;
+        }
       }
     }
 
@@ -124,6 +132,7 @@ void run_simulation(simdata_t *sdata, integrator_t int_type, force_t force_type,
       break;
     default:
       euler_part2(accelerations, time_step, sdata);
+      break;
     }
   }
   free(accelerations);

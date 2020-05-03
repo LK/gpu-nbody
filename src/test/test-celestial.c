@@ -40,12 +40,11 @@ void solar_system_test(celestial_t test_planet) {
   for (int i = 1; i < num_dates; i++) {
     julian_date_offset = julian_dates[i - 1];
     run_simulation(
-        sdata, INT_LEAPFROG, FORCE_NEWTONIAN, MODE_CELESTIAL, SOLAR_DELTA_T,
+        sdata, INT_LEAPFROG, FORCE_NEWTONIAN, SOLAR_DELTA_T,
         (int)((julian_dates[i] - julian_date_offset) * (1.0 / SOLAR_DELTA_T)));
     load_index_vectors(i, real_position, real_velocity, test_planet);
 
-    printf("YEAR %d - POSITION ERROR = %f --- VELOCITY ERROR = %f\n",
-           i,
+    printf("YEAR %d - POSITION ERROR = %f --- VELOCITY ERROR = %f\n", i,
            relative_error(sdata->data + test_planet * 7, real_position, 3),
            relative_error(sdata->data + test_planet * 7 + 3, real_velocity, 3));
   }

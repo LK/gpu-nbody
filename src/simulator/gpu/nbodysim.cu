@@ -1,38 +1,12 @@
 #include "nbodysim.h"
 #include "integrators.cu"
+#include "forces.cu"
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-__device__ void compute_force(float *d_force, float *d_position,
-                              float *d_features, float *d_positionActor,
-                              float *d_featuresActor, simdata_t *d_sdata) {
-
-  float feature = d_features[0];
-  float featureActor = d_featuresActor[0];
-
-  float distance = 0;
-  for (int i = 0; i < d_sdata->posdim; i++) {
-    float pos = d_position[i];
-    float posActor = d_positionActor[i];
-    float deltaPos = pos - posActor;
-    distance += deltaPos * deltaPos;
-  }
-  distance = sqrt(distance);
-
-  for (int i = 0; i < d_sdata->posdim; i++) {
-    float pos = d_position[i];
-    float posActor = d_positionActor[i];
-    float deltaPos = pos - posActor;
-
-    float f =
-        feature * featureActor / distance / distance * deltaPos / distance;
-    d_force[i] -= f;
-  }
-}
 
 __host__ void dump(simdata_t *sdata, int step) {
   printf("=============== STEP %d ===============\n", step);
@@ -75,7 +49,7 @@ void simdata_gpu_free(simdata_t *d_sdata) {
 }
 
 __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
-                                     force_t force_type, float multiplier) {
+                                     force_t force_type, float *aux) {
   int particleIdx = threadIdx.x;
   float *d_position = simdata_pos_ptr(d_sdata, particleIdx);
   float *d_features = simdata_feat_ptr(d_sdata, particleIdx);
@@ -85,23 +59,40 @@ __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
     float *d_featuresActor = simdata_feat_ptr(d_sdata, j);
 
     if (particleIdx != j) {
-      compute_force(d_accel + particleIdx * d_sdata->posdim, d_position,
-                    d_features, d_positionActor, d_featuresActor, d_sdata);
+      newtonian_compute(particleIdx, j, d_accel + particleIdx * d_sdata->posdim,
+          d_position, d_features, d_positionActor, d_featuresActor, d_sdata,
+          aux);
     }
   }
 
   for (int j = 0; j < d_sdata->posdim; j++) {
-    d_accel[particleIdx * d_sdata->posdim + j] *= multiplier / d_features[0];
+    switch (force_type) {
+    case FORCE_NEWTONIAN:
+      d_accel[particleIdx * d_sdata->posdim + j] *=
+        (6.673 * pow(10, -11) * 13.3153474) / d_features[0];
+      break;
+    case FORCE_NEWTONIAN_SIMPLE:
+      d_accel[particleIdx * d_sdata->posdim + j] /= d_features[0];
+      break;
+    }
   }
 }
 
 __host__ void run_simulation(simdata_t *sdata, integrator_t int_type,
-                             force_t force_type, simulator_mode_t mode,
-                             float time_step, int steps) {
+                             force_t force_type, float time_step, int steps) {
   simdata_t *d_sdata = simdata_clone_cpu_gpu(sdata);
   float *d_accel;
   cudaMalloc(&d_accel, sizeof(float) * sdata->posdim * sdata->nparticles);
   cudaMemset(d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
+
+  float *aux;
+  switch (force_type) {
+  case FORCE_NEWTONIAN:
+  case FORCE_NEWTONIAN_SIMPLE:
+    aux = newtonian_precompute(d_sdata, sdata->nparticles);
+    break;
+  }
+
   for (int step = 0; step < steps; step++) {
     if (int_type == INT_LEAPFROG) {
         leapfrog_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel,
@@ -113,8 +104,7 @@ __host__ void run_simulation(simdata_t *sdata, integrator_t int_type,
     }
 
     compute_acceleration<<<1, sdata->nparticles>>>(d_sdata, d_accel,
-                                                   force_type,
-                                                   get_multiplier(mode));
+                                                   force_type, aux);
 
     switch (int_type) {
       case INT_EULER:

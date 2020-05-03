@@ -54,24 +54,15 @@ __host__ __device__ inline void simdata_free(simdata_t *sdata) {
 }
 
 typedef enum integrator_t { INT_EULER = 0, INT_LEAPFROG = 1 } integrator_t;
-typedef enum force_t { FORCE_NEWTONIAN = 0 } force_t;
-typedef enum simulator_mode_t {
-  MODE_SIMPLE = 0,
-  MODE_CELESTIAL,
-  MODE_GALAXY,
-} simulator_mode_t;
+typedef enum force_t {
+  /// Traditional Newtonian force calculation.
+  FORCE_NEWTONIAN = 0,
 
-__host__ __device__ inline float get_multiplier(simulator_mode_t mode) {
-  switch (mode) {
-  case MODE_CELESTIAL:
-    return (6.673 * pow(10, -11) * 13.3153474);
-  case MODE_GALAXY:
-  default:
-    return 1;
-  }
-}
+  /// Newtonian force calculation with G = 1.
+  FORCE_NEWTONIAN_SIMPLE = 1
+} force_t;
 
 void run_simulation(simdata_t *data, integrator_t int_type, force_t force_type,
-                    simulator_mode_t mode, float time_step, int steps);
+                    float time_step, int steps);
 
 #endif
