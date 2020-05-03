@@ -9,7 +9,7 @@ void dumpt(simdata_t *sdata, int step) {
     pos = simdata_pos_ptr(sdata, i);
     vel = simdata_vel_ptr(sdata, i);
     printf("%4d: \t(%.03f, %.03f, %.03f)\t(%.03f, %.03f, %.03f)\n", i, pos[0],
-             pos[1], pos[2], vel[0], vel[1], vel[2]);
+           pos[1], pos[2], vel[0], vel[1], vel[2]);
   }
 }
 
@@ -25,7 +25,7 @@ int main() {
       vel[j] = ((float)rand() / RAND_MAX - 0.5f) * 10.0f;
     }
   }
-  
+
   run_simulation(sdata, INT_EULER, FORCE_NEWTONIAN, MODE_SIMPLE, .1, 1000);
   dumpt(sdata, 1);
   simdata_free(sdata);
