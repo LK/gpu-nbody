@@ -33,7 +33,6 @@ int main() {
                  1000);
   double runtime = end_timer(timer);
   dumpt(sdata, 1);
-  printf("RUNTIME: %f\n", runtime);
   simdata_free(sdata);
 
   return 0;

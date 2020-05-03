@@ -31,7 +31,6 @@ int main() {
   run_simulation(sdata, &sconfig, INT_EULER, FORCE_NEWTONIAN_SIMPLE, .1, 100);
   double runtime = end_timer(timer);
   dumpt(sdata, 1);
-  printf("RUNTIME: %f\n", runtime);
   simdata_free(sdata);
 
   return 0;

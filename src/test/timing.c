@@ -1,4 +1,5 @@
 #include "timing.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 
@@ -16,6 +17,12 @@ measure_t *start_timer() {
 }
 
 double end_timer(measure_t *timer) {
+  double time = end_timer_silent(timer);
+  fprintf(stderr, "RUNTIME: %f\n", time);
+  return time;
+}
+
+double end_timer_silent(measure_t *timer) {
   double end;
   timing(&end);
   end -= *timer;
