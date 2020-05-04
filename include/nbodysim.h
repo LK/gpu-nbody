@@ -76,7 +76,10 @@ typedef enum force_t {
   FORCE_NEWTONIAN = 0,
 
   /// Newtonian force calculation with G = 1.
-  FORCE_NEWTONIAN_SIMPLE = 1
+  FORCE_NEWTONIAN_SIMPLE = 1,
+
+  /// t-sne force calculation
+  FORCE_TSNE = 2
 } force_t;
 
 /// Defines additional configuration options for the simulation.
