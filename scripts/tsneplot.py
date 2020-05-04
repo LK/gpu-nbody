@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # script for plotting tsne embedding
-f = open('../output', 'r')
+f = open('output', 'r')
 Lines = f.readlines()
 
 data = []
