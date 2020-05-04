@@ -24,7 +24,7 @@ void dumpt(simdata_t *sdata, int step) {
 }
 
 void load_data(simdata_t *sdata) {
-  int skip = 81920 / NUM_BODIES;
+  int skip = 40960 / NUM_BODIES;
 
   FILE *galaxy_in;
 
