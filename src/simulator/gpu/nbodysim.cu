@@ -1,4 +1,5 @@
 #include "nbodysim.h"
+#include "timing.h"
 #include "integrators.cu"
 #include "forces.cu"
 #include "tsneforces.cu"
@@ -94,6 +95,7 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
   cudaMalloc(&d_accel, sizeof(float) * sdata->posdim * sdata->nparticles);
   cudaMemset(d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
 
+  measure_t *precomputeTimer = start_timer();
   float *aux = NULL;
   if (sconfig->precompute) {
     switch (force_type) {
@@ -106,7 +108,9 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
       break;
     }
   }
+  end_timer(precomputeTimer);
 
+  measure_t *computeTimer = start_timer();
   for (int step = 0; step < steps; step++) {
     if (int_type == INT_LEAPFROG) {
       leapfrog_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel,
@@ -135,6 +139,7 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
         break;
     }
   }
+  end_timer(computeTimer);
 
   simdata_copy_gpu_cpu(d_sdata, sdata);
   simdata_gpu_free(d_sdata);

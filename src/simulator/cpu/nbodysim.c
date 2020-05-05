@@ -1,4 +1,5 @@
 #include "nbodysim.h"
+#include "timing.h"
 #include "tsneforces.c"
 #include <math.h>
 #include <stdio.h>
@@ -87,7 +88,8 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
       (float *)malloc(sizeof(float) * sdata->posdim * sdata->nparticles);
   memset(accelerations, 0, sdata->posdim * sdata->nparticles * sizeof(float));
 
-  float *aux = NULL;
+  measure_t *precomputeTimer = start_timer();
+  float *aux  = NULL;
   if (sconfig->precompute) {
     switch (force_type) {
       case FORCE_TSNE:
@@ -100,7 +102,9 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
         break;
     }
   }
-  
+  end_timer(precomputeTimer);
+
+  measure_t *computeTimer = start_timer();
   for (int step = 0; step < steps; step++) {
 
     switch (int_type) {
@@ -173,6 +177,8 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
       break;
     }
   }
+  end_timer(computeTimer);
+
   if(aux) free(aux);
   free(accelerations);
 }
