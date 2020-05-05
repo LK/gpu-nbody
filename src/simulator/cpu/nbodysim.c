@@ -142,9 +142,6 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
                  sdata, aux);
           break;
         case FORCE_NEWTONIAN:
-          getForce(acceleration, position, features, positionActor, featuresActor,
-                 sdata);
-          break;
         case FORCE_NEWTONIAN_SIMPLE:
           getForce(acceleration, position, features, positionActor, featuresActor,
                  sdata);

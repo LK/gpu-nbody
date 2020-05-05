@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-const int NUM_IMAGES = 1797;
+#define NUM_IMAGES 1797
+
 int LABELS[NUM_IMAGES];
 float FLAT_IMAGES[NUM_IMAGES * 64];
 float IMAGES[NUM_IMAGES][64];

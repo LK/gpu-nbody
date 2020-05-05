@@ -13,7 +13,7 @@ TEST_GALAXY_SRCS := $(BASE_SRCS) src/test/test-galaxy.c
 TEST_TSNE_SRCS := $(BASE_SRCS) src/test/test-sne.c
 
 CPU_EXECUTABLES := test-simple-cpu test-random-cpu test-celestial-cpu test-galaxy-cpu test-tsne-cpu
-GPU_EXECUTABLES := test-simple-gpu test-random-gpu test-celestial-gpu test-galaxy-gpu
+GPU_EXECUTABLES := test-simple-gpu test-random-gpu test-celestial-gpu test-galaxy-gpu test-tsne-gpu
 
 CPU_SRCS := src/simulator/cpu/nbodysim.c
 GPU_SRCS := src/simulator/gpu/nbodysim.o
@@ -49,6 +49,9 @@ test-celestial-gpu: $(patsubst %.c,%.o,$(TEST_CELESTIAL_SRCS)) $(GPU_SRCS)
 	$(NVCC) $(GENCODE) -o bin/$@ $(NVCCFLAGS) $^
 
 test-galaxy-gpu: $(patsubst %.c,%.o,$(TEST_GALAXY_SRCS)) $(GPU_SRCS)
+	$(NVCC) $(GENCODE) -o bin/$@ $(NVCCFLAGS) $^
+
+test-tsne-gpu: $(patsubst %.c,%.o,$(TEST_TSNE_SRCS)) $(GPU_SRCS)
 	$(NVCC) $(GENCODE) -o bin/$@ $(NVCCFLAGS) $^
 
 %.o: %.c
