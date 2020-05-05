@@ -10,7 +10,7 @@ TEST_SIMPLE_SRCS := $(BASE_SRCS) src/test/test-simple.c
 TEST_RANDOM_SRCS := $(BASE_SRCS) src/test/test-random.c
 TEST_CELESTIAL_SRCS := $(BASE_SRCS) src/test/test-celestial.c src/simulator/solarsystemdata.c
 TEST_GALAXY_SRCS := $(BASE_SRCS) src/test/test-galaxy.c
-TEST_TSNE_SRCS := $(BASE_SRCS) src/test/test-sne.c
+TEST_TSNE_SRCS := $(BASE_SRCS) src/test/test-sne.c src/test/mnist.c
 
 CPU_EXECUTABLES := test-simple-cpu test-random-cpu test-celestial-cpu test-galaxy-cpu test-tsne-cpu
 GPU_EXECUTABLES := test-simple-gpu test-random-gpu test-celestial-gpu test-galaxy-gpu test-tsne-gpu

@@ -173,5 +173,6 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
       break;
     }
   }
+  if(aux) free(aux);
   free(accelerations);
 }

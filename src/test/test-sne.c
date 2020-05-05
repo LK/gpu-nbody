@@ -5,6 +5,9 @@
 #include "nbodysim.h"
 #include "timing.h"
 
+int* LABELS;
+float** IMAGES;
+
 void dumpt(simdata_t *sdata, int step)
 {
     printf("=============== STEP %d ===============\n", step);
@@ -36,9 +39,12 @@ void dumpEmbedding(simdata_t *sdata)
 int main()
 {
     load_mnist();
-    int dataSize = sizeof(IMAGES) / sizeof(IMAGES[0])/2; // number of data entries
-    int dataDim = sizeof(IMAGES[0]) / sizeof(IMAGES[0][0]); // size of mnist data entry
-    int dim = 2;                                            // dimensional reduction size
+    IMAGES = getImages();
+    LABELS = getLabels();
+
+    int dataSize = 1024;      // number of data entries
+    int dataDim = IMAGE_DIM;  // size of mnist data entry
+    int dim = 2;             // dimensional reduction size
 
     simdata_t *sdata = simdata_create(dim, dataDim, dataSize);
 
@@ -56,7 +62,7 @@ int main()
 
     simconfig_t sconfig = {.precompute = true};
     measure_t *timer = start_timer();
-    run_simulation(sdata, &sconfig, INT_LEAPFROG, FORCE_TSNE, 1, 300);
+    run_simulation(sdata, &sconfig, INT_EULER, FORCE_TSNE, 1, 5000);
     double runtime = end_timer(timer);
     dumpEmbedding(sdata);
     simdata_free(sdata);

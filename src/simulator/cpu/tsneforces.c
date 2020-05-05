@@ -1,6 +1,4 @@
-#define PERPLEXITY 50
-#define MIN_SD 0.00000001
-#define MAX_SD 100000000
+#include "mnist.h"
 
 float getl2NormDiff(float *a, float *b, int dim)
 {
