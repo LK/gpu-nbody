@@ -115,7 +115,7 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
 
     if(force_type == FORCE_TSNE)
     {
-      setQjiDenominator(d_sdata, aux);
+      setQjiDenominator(d_sdata, aux, sdata->nparticles);
     }
 
 

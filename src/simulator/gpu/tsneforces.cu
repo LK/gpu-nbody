@@ -90,31 +90,33 @@ __host__ float *tsne_precompute(simdata_t *d_sdata, int nparticles) {
   return aux;
 }
 
-
-// TODO: Parallelize
-__host__ float getl2NormDiffQiDen(float *a, float *b, int dim)
-{
-    float norm = 0;
-    for (int i = 0; i < dim; i++)
+__global__ void _tsne_precompute_denominators_kernel(simdata_t *d_sdata, float *denominators) {
+    float denominator = 0;
+    for(int i = 0; i < d_sdata->nparticles; i++)
     {
-        float diff = a[i] - b[i];
-        norm += diff * diff;
+        if(i != threadIdx.x)
+        {
+            denominator += 1 / (1 + getl2NormDiff(simdata_pos_ptr(d_sdata, i), simdata_pos_ptr(d_sdata, threadIdx.x), d_sdata->posdim));
+        }
     }
-    return norm;
+    denominators[threadIdx.x] = denominator;
 }
-__host__ void setQjiDenominator(simdata_t *d_sdata, float *aux)
+__global__ void _tsne_sum_denominators_kernel(float *denominators, float *aux, int nparticles)
 {
-    // float denominator = 0;
-    // for (int k = 0; k < d_sdata->nparticles; k++)
-    // {
-    //     for (int l = 0; l < d_sdata->nparticles; l++)
-    //     {
-    //         if (l != k)
-    //             denominator += 1 / (1 + getl2NormDiffQiDen(simdata_pos_ptr(d_sdata, l), simdata_pos_ptr(d_sdata, k), d_sdata->posdim));
-    //     }
-    // }
-    // printf("%f\n", denominator);
-    // aux[(d_sdata->nparticles) * (d_sdata->nparticles)] = denominator;
+    float denominator = 0;
+    for(int i = 0; i < nparticles; i++)
+    {
+        denominator += denominators[i];
+    }
+    aux[nparticles*nparticles] = denominator;
+}
+__host__ void setQjiDenominator(simdata_t *d_sdata, float *aux, int nparticles)
+{
+    float *denominators;
+    cudaMalloc(&denominators, sizeof(float) * nparticles);
+    _tsne_precompute_denominators_kernel<<<1, nparticles>>>(d_sdata, denominators);
+    _tsne_sum_denominators_kernel<<<1, 1>>>(denominators, aux, nparticles);
+    cudaFree(denominators);
 }
 
 __device__ void tsne_compute(int particleA, int particleB, float *d_force, float *d_position, float *d_positionActor, simdata_t *d_sdata, float *aux) {
@@ -123,8 +125,7 @@ __device__ void tsne_compute(int particleA, int particleB, float *d_force, float
     float pji = aux[particleA * dataSize + particleB];
     float pij = aux[particleB * dataSize + particleA];
     float qjiNumerator = 1 / (1 + getl2NormDiff(d_position, d_positionActor, d_sdata->posdim));
-    // float qjiDenominator = aux[d_sdata->nparticles * d_sdata->nparticles];
-    float qjiDenominator = 17000;
+    float qjiDenominator = aux[d_sdata->nparticles * d_sdata->nparticles];
 
     float scalar = 4 * ((pij + pji) / 2 / dataSize - qjiNumerator / qjiDenominator) / (1 + getl2NormDiff(d_position, d_positionActor, d_sdata->posdim));
     
