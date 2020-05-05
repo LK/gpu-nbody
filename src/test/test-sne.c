@@ -56,7 +56,7 @@ int main()
 
     simconfig_t sconfig = {.precompute = true};
     measure_t *timer = start_timer();
-    run_simulation(sdata, &sconfig, INT_LEAPFROG, FORCE_TSNE, 1, 500);
+    run_simulation(sdata, &sconfig, INT_LEAPFROG, FORCE_TSNE, 1, 300);
     double runtime = end_timer(timer);
     dumpEmbedding(sdata);
     simdata_free(sdata);
