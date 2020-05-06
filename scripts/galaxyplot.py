@@ -6,7 +6,7 @@ from subprocess import PIPE
 
 cpu_data = []
 gpu_data = []
-steps = 100
+steps = 1000
 subprocess.run(["make","test-galaxy-cpu"])
 for i in [128,256,512,1024,2048,4096,8192]:
 	outputs = subprocess.run(["./bin/test-galaxy-cpu " + str(steps) + " " + str(i)], shell=True,stdout=PIPE,encoding='utf-8')
@@ -83,7 +83,24 @@ plt.xlabel("Num Bodies")
 plt.legend()
 plt.tight_layout()
 plt.savefig("plots/galaxy-fig.png")
+plt.close()
 
+for i in [16384,20480,28672,32768,40960]:
+	outputs = subprocess.run(["./bin/test-galaxy-gpu " + str(steps) + " " + str(i)], shell=True,stdout=PIPE,encoding='utf-8')
+	tokens = outputs.stdout.split(", ")
+	tokens[0] = float(tokens[0])
+	tokens[1] = float(tokens[1])
+	tokens[2] = float(tokens[2])
+	tokens[3] = float(tokens[3])
+	tokens.append(i)
+	gpu_data.append(tokens)
+	print(i)
 
-
-
+plt.plot(x,gpu_total_time,label='GPU')
+plt.title('GPU Total Time')
+plt.ylabel("Time (sec)")
+plt.xlabel("Num Bodies")
+plt.legend()
+plt.tight_layout()
+plt.savefig('plots/galaxy-fig-force.png')
+plt.close()
