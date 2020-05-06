@@ -52,7 +52,8 @@ void simdata_gpu_free(simdata_t *d_sdata) {
 
 __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
                                      force_t force_type, float *aux) {
-  int particleIdx = threadIdx.x;
+  int particleIdx = threadIdx.x + blockIdx.x * 1024;
+  if (particleIdx >= d_sdata->nparticles) return;
   float *d_position = simdata_pos_ptr(d_sdata, particleIdx);
   float *d_features = simdata_feat_ptr(d_sdata, particleIdx);
 
@@ -117,7 +118,7 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
     cudaThreadSynchronize();
     timer = start_timer();
     if (int_type == INT_LEAPFROG) {
-      leapfrog_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel,
+      leapfrog_integrate<<<sdata->nparticles / 1024 + 1, 1024>>>(d_sdata, d_accel,
             time_step, true);
     }
 
@@ -136,7 +137,7 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
 
     cudaThreadSynchronize();
     timer = start_timer();
-    compute_acceleration<<<1, sdata->nparticles>>>(d_sdata, d_accel, force_type, aux);
+    compute_acceleration<<<sdata->nparticles / 1024 + 1, 1024>>>(d_sdata, d_accel, force_type, aux);
     cudaThreadSynchronize();
     force_calc_time += end_timer_silent(timer);
 
@@ -144,10 +145,10 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
     cudaThreadSynchronize();
     switch (int_type) {
       case INT_EULER:
-        euler_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel, time_step);
+        euler_integrate<<<sdata->nparticles / 1024 + 1, 1024>>>(d_sdata, d_accel, time_step);
         break;
       case INT_LEAPFROG:
-        leapfrog_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel,
+        leapfrog_integrate<<<sdata->nparticles / 1024 + 1, 1024>>>(d_sdata, d_accel,
             time_step, false);
         break;
     }

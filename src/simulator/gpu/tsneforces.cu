@@ -57,16 +57,20 @@ __device__ float findSd(int dataSize, int i, float *l2NormDiffs)
     return sd;
 }
 __global__ void _tsne_precompute_aux_kernel(simdata_t *d_sdata, float *aux, float *l2NormDiffs) {
-    float stdev = findSd(d_sdata->nparticles, threadIdx.x, l2NormDiffs);
-    float *myAux = aux + d_sdata->nparticles * threadIdx.x;
+    int idx = threadIdx.x + blockIdx.x * 1024;
+    if (idx >= d_sdata->nparticles) return;
+    float stdev = findSd(d_sdata->nparticles, idx, l2NormDiffs);
+    float *myAux = aux + d_sdata->nparticles * idx;
     for (int i = 0; i < d_sdata->nparticles; i++)
     {
-        myAux[i] = getPji(d_sdata->nparticles, i, threadIdx.x, stdev, l2NormDiffs);
+        myAux[i] = getPji(d_sdata->nparticles, i, idx, stdev, l2NormDiffs);
     }
 }
 __global__ void _tsne_precompute_l2norms_kernel(simdata_t *d_sdata, float *l2NormDiffs) {
-    float *myFeatures = simdata_feat_ptr(d_sdata, threadIdx.x);
-    float *myL2NormDiffs = l2NormDiffs + d_sdata->nparticles * threadIdx.x;
+    int idx = threadIdx.x + blockIdx.x * 1024;
+    if (idx >= d_sdata->nparticles) return;
+    float *myFeatures = simdata_feat_ptr(d_sdata, idx);
+    float *myL2NormDiffs = l2NormDiffs + d_sdata->nparticles * idx;
     for(int i = 0; i < d_sdata->nparticles; i++)
     {
         myL2NormDiffs[i] = getl2NormDiff(simdata_feat_ptr(d_sdata, i), myFeatures, d_sdata->featdim);
@@ -77,26 +81,29 @@ __host__ float *tsne_precompute(simdata_t *d_sdata, int nparticles) {
 
   float *l2NormDiffs;
   cudaMalloc(&l2NormDiffs, sizeof(float) * (nparticles * nparticles));
-  _tsne_precompute_l2norms_kernel<<<1, nparticles>>>(d_sdata, l2NormDiffs);
+  _tsne_precompute_l2norms_kernel<<<nparticles / 1024 + 1, 1024>>>(d_sdata, l2NormDiffs);
 
   float *aux;
   cudaMalloc(&aux, sizeof(float) * (nparticles * nparticles + 1));
-  _tsne_precompute_aux_kernel<<<1, nparticles>>>(d_sdata, aux, l2NormDiffs);
+  _tsne_precompute_aux_kernel<<<nparticles / 1024 + 1, 1024>>>(d_sdata, aux, l2NormDiffs);
 
   cudaFree(l2NormDiffs);
   return aux;
 }
 
 __global__ void _tsne_precompute_denominators_kernel(simdata_t *d_sdata, float *denominators) {
+    int idx = threadIdx.x + blockIdx.x * 1024;
+    if (idx >= d_sdata->nparticles) return;
     float denominator = 0;
     for(int i = 0; i < d_sdata->nparticles; i++)
     {
-        if(i != threadIdx.x)
+        if(i != idx)
         {
-            denominator += 1 / (1 + getl2NormDiff(simdata_pos_ptr(d_sdata, i), simdata_pos_ptr(d_sdata, threadIdx.x), d_sdata->posdim));
+            denominator += 1 / (1 + getl2NormDiff(simdata_pos_ptr(d_sdata, i),
+                  simdata_pos_ptr(d_sdata, idx), d_sdata->posdim));
         }
     }
-    denominators[threadIdx.x] = denominator;
+    denominators[idx] = denominator;
 }
 __global__ void _tsne_sum_denominators_kernel(float *denominators, float *aux, int nparticles)
 {
@@ -111,7 +118,7 @@ __host__ void setQjiDenominator(simdata_t *d_sdata, float *aux, int nparticles)
 {
     float *denominators;
     cudaMalloc(&denominators, sizeof(float) * nparticles);
-    _tsne_precompute_denominators_kernel<<<1, nparticles>>>(d_sdata, denominators);
+    _tsne_precompute_denominators_kernel<<<nparticles / 1024 + 1, 1024>>>(d_sdata, denominators);
     _tsne_sum_denominators_kernel<<<1, 1>>>(denominators, aux, nparticles);
     cudaFree(denominators);
 }
