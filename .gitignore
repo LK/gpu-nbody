@@ -57,3 +57,6 @@ dkms.conf
 # Test Files
 data/*.tab
 *.jpg
+
+# vscode
+.vscode/

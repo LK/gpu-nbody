@@ -1,6 +1,8 @@
 #include "nbodysim.h"
+#include "timing.h"
 #include "integrators.cu"
 #include "forces.cu"
+#include "tsneforces.cu"
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <math.h>
@@ -59,14 +61,21 @@ __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
     float *d_featuresActor = simdata_feat_ptr(d_sdata, j);
 
     if (particleIdx != j) {
-      newtonian_compute(particleIdx, j, d_accel + particleIdx * d_sdata->posdim,
-          d_position, d_features, d_positionActor, d_featuresActor, d_sdata,
-          aux);
+      if(force_type == FORCE_TSNE)
+      {
+        tsne_compute(particleIdx, j, d_accel + particleIdx * d_sdata->posdim, d_position, d_positionActor, d_sdata, aux);
+      }
+      else
+      {
+        newtonian_compute(particleIdx, j, d_accel + particleIdx * d_sdata->posdim, d_position, d_features, d_positionActor, d_featuresActor, d_sdata, aux);
+      }
     }
   }
 
   for (int j = 0; j < d_sdata->posdim; j++) {
     switch (force_type) {
+    case FORCE_TSNE:
+      break;
     case FORCE_NEWTONIAN:
       d_accel[particleIdx * d_sdata->posdim + j] *=
         (6.673 * pow(10, -11) * 13.3153474) / d_features[0];
@@ -86,28 +95,39 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
   cudaMalloc(&d_accel, sizeof(float) * sdata->posdim * sdata->nparticles);
   cudaMemset(d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
 
+  measure_t *precomputeTimer = start_timer();
   float *aux = NULL;
   if (sconfig->precompute) {
     switch (force_type) {
+    case FORCE_TSNE:
+      aux = tsne_precompute(d_sdata, sdata->nparticles);
+      break;
     case FORCE_NEWTONIAN:
     case FORCE_NEWTONIAN_SIMPLE:
       aux = newtonian_precompute(d_sdata, sdata->nparticles);
       break;
     }
   }
+  end_timer(precomputeTimer);
 
+  measure_t *computeTimer = start_timer();
   for (int step = 0; step < steps; step++) {
     if (int_type == INT_LEAPFROG) {
-        leapfrog_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel,
+      leapfrog_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel,
             time_step, true);
     }
+
+    if(force_type == FORCE_TSNE)
+    {
+      setQjiDenominator(d_sdata, aux, sdata->nparticles);
+    }
+
 
     if (step > 0) {
       cudaMemset(d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
     }
 
-    compute_acceleration<<<1, sdata->nparticles>>>(d_sdata, d_accel,
-                                                   force_type, aux);
+    compute_acceleration<<<1, sdata->nparticles>>>(d_sdata, d_accel, force_type, aux);
 
     switch (int_type) {
       case INT_EULER:
@@ -119,6 +139,7 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
         break;
     }
   }
+  end_timer(computeTimer);
 
   simdata_copy_gpu_cpu(d_sdata, sdata);
   simdata_gpu_free(d_sdata);

@@ -7,7 +7,7 @@ cpu_data = []
 steps = 100
 subprocess.run(["make","test-galaxy-cpu"])
 # for i in [4096,8192,16384,32768,40960,49152]:
-for i in [128,256,512,1024,2048,4096,8192]
+for i in [128,256,512,1024,2048,4096,8192]:
 	outputs = subprocess.run(["./bin/test-galaxy-cpu " + str(steps) + " " + str(i)], shell=True,capture_output=True,encoding='utf-8')
 	tokens = outputs.stdout.split(", ")
 	tokens[0] = float(tokens[0])
