@@ -91,21 +91,22 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
 
   double integration_time = 0;
   measure_t *fulltimer = start_timer();
-  measure_t *timer;
 
-  float *aux  = NULL;
+  measure_t *timer = start_timer();
+  float *aux = NULL;
   if (sconfig->precompute) {
     switch (force_type) {
-      case FORCE_TSNE:
-        aux = tsne_precompute(sdata, sdata->nparticles);
-        break;
-      case FORCE_NEWTONIAN:
-        break;
-      case FORCE_NEWTONIAN_SIMPLE:
-        // aux = newtonian_precompute(d_sdata, sdata->nparticles);
-        break;
+    case FORCE_TSNE:
+      aux = tsne_precompute(sdata, sdata->nparticles);
+      break;
+    case FORCE_NEWTONIAN:
+      break;
+    case FORCE_NEWTONIAN_SIMPLE:
+      // aux = newtonian_precompute(d_sdata, sdata->nparticles);
+      break;
     }
   }
+  double precompute_time = end_timer_silent(timer);
 
   for (int step = 0; step < steps; step++) {
     timer = start_timer();
@@ -144,16 +145,14 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
 
         switch (force_type) {
         case FORCE_TSNE:
-          getTsneForce(acceleration, position, i, positionActor, j,
-                 sdata, aux);
+          getTsneForce(acceleration, position, i, positionActor, j, sdata, aux);
           break;
         case FORCE_NEWTONIAN:
         case FORCE_NEWTONIAN_SIMPLE:
-          getForce(acceleration, position, features, positionActor, featuresActor,
-                 sdata);
+          getForce(acceleration, position, features, positionActor,
+                   featuresActor, sdata);
           break;
         }
-
       }
       for (int j = 0; j < sdata->posdim; j++) {
         switch (force_type) {
@@ -182,9 +181,11 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
     integration_time += end_timer_silent(timer);
   }
   double fulltime = end_timer_silent(fulltimer);
-  printf("%f, %f, %f\n",force_calc_time,integration_time,fulltime);
+  printf("%f, %f, %f, %f\n", precompute_time, force_calc_time, integration_time,
+         fulltime);
 
-  if(aux) free(aux);
+  if (aux)
+    free(aux);
 
   free(accelerations);
 }

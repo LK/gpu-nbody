@@ -95,7 +95,10 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
   cudaMalloc(&d_accel, sizeof(float) * sdata->posdim * sdata->nparticles);
   cudaMemset(d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
 
-  measure_t *precomputeTimer = start_timer();
+  double integration_time = 0;
+  double force_calc_time = 0;
+  measure_t *fulltimer = start_timer();
+  measure_t *timer = start_timer();
   float *aux = NULL;
   if (sconfig->precompute) {
     switch (force_type) {
@@ -108,10 +111,11 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
       break;
     }
   }
-  end_timer(precomputeTimer);
+  double precompute_time = end_timer_silent(timer);
 
-  measure_t *computeTimer = start_timer();
   for (int step = 0; step < steps; step++) {
+    cudaThreadSynchronize();
+    timer = start_timer();
     if (int_type == INT_LEAPFROG) {
       leapfrog_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel,
             time_step, true);
@@ -122,13 +126,22 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
       setQjiDenominator(d_sdata, aux, sdata->nparticles);
     }
 
+    cudaThreadSynchronize();
+    integration_time += end_timer_silent(timer);
+
 
     if (step > 0) {
       cudaMemset(d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
     }
 
+    cudaThreadSynchronize();
+    timer = start_timer();
     compute_acceleration<<<1, sdata->nparticles>>>(d_sdata, d_accel, force_type, aux);
+    cudaThreadSynchronize();
+    force_calc_time += end_timer_silent(timer);
 
+    timer = start_timer();
+    cudaThreadSynchronize();
     switch (int_type) {
       case INT_EULER:
         euler_integrate<<<1, sdata->nparticles>>>(d_sdata, d_accel, time_step);
@@ -138,8 +151,12 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
             time_step, false);
         break;
     }
+    cudaThreadSynchronize();
+    integration_time += end_timer_silent(timer);
   }
-  end_timer(computeTimer);
+  double fulltime = end_timer_silent(fulltimer);
+  printf("%f, %f, %f, %f\n", precompute_time, force_calc_time, integration_time,
+         fulltime);
 
   simdata_copy_gpu_cpu(d_sdata, sdata);
   simdata_gpu_free(d_sdata);
