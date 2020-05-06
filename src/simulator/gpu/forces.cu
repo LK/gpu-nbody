@@ -1,11 +1,12 @@
 #include "nbodysim.h"
-#include <stdio.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include <stdio.h>
 
 __global__ void _newtonian_precompute_kernel(simdata_t *d_sdata, float *aux) {
   int idx = threadIdx.x + blockIdx.x * 1024;
-  if (idx >= d_sdata->nparticles) return;
+  if (idx >= d_sdata->nparticles)
+    return;
   float myMass = simdata_feat_ptr(d_sdata, idx)[0];
   float *myAux = aux + d_sdata->nparticles * idx;
   for (int i = 0; i < d_sdata->nparticles; i++) {
@@ -20,10 +21,11 @@ __host__ float *newtonian_precompute(simdata_t *d_sdata, int nparticles) {
   return aux;
 }
 
-__device__ void newtonian_compute(
-    int particleA, int particleB, float *d_force, float *d_position,
-    float *d_features, float *d_positionActor, float *d_featuresActor,
-    simdata_t *d_sdata, float *aux) {
+__device__ void newtonian_compute(int particleA, int particleB, float *d_force,
+                                  float *d_position, float *d_features,
+                                  float *d_positionActor,
+                                  float *d_featuresActor, simdata_t *d_sdata,
+                                  float *aux) {
   float distance = 0;
   for (int i = 0; i < d_sdata->posdim; i++) {
     float pos = d_position[i];
@@ -38,8 +40,8 @@ __device__ void newtonian_compute(
     float posActor = d_positionActor[i];
     float deltaPos = pos - posActor;
 
-    float massTerm = aux ? aux[particleA * d_sdata->nparticles + particleB] :
-      d_features[0] * d_featuresActor[0];
+    float massTerm = aux ? aux[particleA * d_sdata->nparticles + particleB]
+                         : d_features[0] * d_featuresActor[0];
 
     float f = massTerm / distance / distance * deltaPos / distance;
     d_force[i] -= f;

@@ -1,6 +1,6 @@
-#include "timing.h"
 #include "nbodysim.h"
 #include "solarsystemdata.h"
+#include "timing.h"
 #include <stdlib.h>
 
 #define SOLAR_DELTA_T (0.01)

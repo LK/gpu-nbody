@@ -1,12 +1,13 @@
 #include "nbodysim.h"
-#include <stdio.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include <stdio.h>
 
 __global__ void leapfrog_integrate(simdata_t *d_sdata, float *d_acceleration,
                                    float dt, bool before_accel_update) {
   int idx = threadIdx.x + blockIdx.x * 1024;
-  if (idx >= d_sdata->nparticles) return;
+  if (idx >= d_sdata->nparticles)
+    return;
   float *d_pos = simdata_pos_ptr(d_sdata, idx);
   float *d_vel = simdata_vel_ptr(d_sdata, idx);
   float *d_accel = d_acceleration + d_sdata->posdim * idx;
@@ -22,7 +23,8 @@ __global__ void leapfrog_integrate(simdata_t *d_sdata, float *d_acceleration,
 __global__ void euler_integrate(simdata_t *d_sdata, float *d_acceleration,
                                 float dt) {
   int idx = threadIdx.x + blockIdx.x * 1024;
-  if (idx >= d_sdata->nparticles) return;
+  if (idx >= d_sdata->nparticles)
+    return;
   float *d_pos = simdata_pos_ptr(d_sdata, idx);
   float *d_vel = simdata_vel_ptr(d_sdata, idx);
   float *d_accel = d_acceleration + d_sdata->posdim * idx;

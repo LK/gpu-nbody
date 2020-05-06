@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/// Compute Newtonian force between two particles.
 void getForce(float *force, float *position, float *features,
               float *positionActor, float *featuresActor, simdata_t *sdata) {
 
@@ -32,6 +33,7 @@ void getForce(float *force, float *position, float *features,
   }
 }
 
+/// Compute the first half of the Leapfrog integration routine.
 void leapfrog_part1(float *accelerations, float timeStep, simdata_t *sdata) {
   float *position, *velocity, *acceleration;
   for (int i = 0; i < sdata->nparticles; i++) {
@@ -45,6 +47,7 @@ void leapfrog_part1(float *accelerations, float timeStep, simdata_t *sdata) {
   }
 }
 
+/// Compute the second half of the Leapfrog integration routine.
 void leapfrog_part2(float *accelerations, float timeStep, simdata_t *sdata) {
   float *velocity, *acceleration;
   for (int i = 0; i < sdata->nparticles; i++) {
@@ -56,6 +59,7 @@ void leapfrog_part2(float *accelerations, float timeStep, simdata_t *sdata) {
   }
 }
 
+/// Compute the Euler integration routine.
 void euler_part2(float *accelerations, float timeStep, simdata_t *sdata) {
   float *position, *velocity, *acceleration;
   for (int j = 0; j < sdata->nparticles; j++) {
@@ -70,6 +74,7 @@ void euler_part2(float *accelerations, float timeStep, simdata_t *sdata) {
   }
 }
 
+/// Debug logging.
 void dump(simdata_t *sdata, int step) {
   printf("=============== STEP %d ===============\n", step);
   float *pos, *vel;
@@ -81,6 +86,7 @@ void dump(simdata_t *sdata, int step) {
   }
 }
 
+/// Run n-body simulation.
 void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
                     integrator_t int_type, force_t force_type, float time_step,
                     int steps) {
@@ -94,6 +100,7 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
 
   measure_t *timer = start_timer();
   float *aux = NULL;
+  // If enabled and supported, pre-compute some of the force computations.
   if (sconfig->precompute) {
     switch (force_type) {
     case FORCE_TSNE:

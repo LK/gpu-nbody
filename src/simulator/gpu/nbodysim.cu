@@ -1,7 +1,7 @@
 #include "nbodysim.h"
-#include "timing.h"
-#include "integrators.cu"
 #include "forces.cu"
+#include "integrators.cu"
+#include "timing.h"
 #include "tsneforces.cu"
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -30,8 +30,8 @@ simdata_t *simdata_clone_cpu_gpu(simdata_t *sdata) {
   sdata->data = d_sdata_data;
   cudaMemcpy(d_sdata, sdata, sizeof(simdata_t), cudaMemcpyHostToDevice);
   sdata->data = tmp;
-  cudaMemcpy(d_sdata_data, sdata->data,
-             sizeof(float) * simdata_buf_size(sdata), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_sdata_data, sdata->data, sizeof(float) * simdata_buf_size(sdata),
+             cudaMemcpyHostToDevice);
   return d_sdata;
 }
 
@@ -39,7 +39,7 @@ void simdata_copy_gpu_cpu(simdata_t *d_sdata, simdata_t *sdata) {
   float *data = sdata->data;
   cudaMemcpy(sdata, d_sdata, sizeof(simdata_t), cudaMemcpyDeviceToHost);
   cudaMemcpy(data, sdata->data, sizeof(float) * simdata_buf_size(sdata),
-      cudaMemcpyDeviceToHost);
+             cudaMemcpyDeviceToHost);
   sdata->data = data;
 }
 
@@ -53,7 +53,8 @@ void simdata_gpu_free(simdata_t *d_sdata) {
 __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
                                      force_t force_type, float *aux) {
   int particleIdx = threadIdx.x + blockIdx.x * 1024;
-  if (particleIdx >= d_sdata->nparticles) return;
+  if (particleIdx >= d_sdata->nparticles)
+    return;
   float *d_position = simdata_pos_ptr(d_sdata, particleIdx);
   float *d_features = simdata_feat_ptr(d_sdata, particleIdx);
 
@@ -62,13 +63,13 @@ __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
     float *d_featuresActor = simdata_feat_ptr(d_sdata, j);
 
     if (particleIdx != j) {
-      if(force_type == FORCE_TSNE)
-      {
-        tsne_compute(particleIdx, j, d_accel + particleIdx * d_sdata->posdim, d_position, d_positionActor, d_sdata, aux);
-      }
-      else
-      {
-        newtonian_compute(particleIdx, j, d_accel + particleIdx * d_sdata->posdim, d_position, d_features, d_positionActor, d_featuresActor, d_sdata, aux);
+      if (force_type == FORCE_TSNE) {
+        tsne_compute(particleIdx, j, d_accel + particleIdx * d_sdata->posdim,
+                     d_position, d_positionActor, d_sdata, aux);
+      } else {
+        newtonian_compute(
+            particleIdx, j, d_accel + particleIdx * d_sdata->posdim, d_position,
+            d_features, d_positionActor, d_featuresActor, d_sdata, aux);
       }
     }
   }
@@ -79,7 +80,7 @@ __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
       break;
     case FORCE_NEWTONIAN:
       d_accel[particleIdx * d_sdata->posdim + j] *=
-        (6.673 * pow(10, -11) * 13.3153474) / d_features[0];
+          (6.673 * pow(10, -11) * 13.3153474) / d_features[0];
       break;
     case FORCE_NEWTONIAN_SIMPLE:
       d_accel[particleIdx * d_sdata->posdim + j] /= d_features[0];
@@ -118,18 +119,16 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
     cudaThreadSynchronize();
     timer = start_timer();
     if (int_type == INT_LEAPFROG) {
-      leapfrog_integrate<<<sdata->nparticles / 1024 + 1, 1024>>>(d_sdata, d_accel,
-            time_step, true);
+      leapfrog_integrate<<<sdata->nparticles / 1024 + 1, 1024>>>(
+          d_sdata, d_accel, time_step, true);
     }
 
-    if(force_type == FORCE_TSNE)
-    {
+    if (force_type == FORCE_TSNE) {
       setQjiDenominator(d_sdata, aux, sdata->nparticles);
     }
 
     cudaThreadSynchronize();
     integration_time += end_timer_silent(timer);
-
 
     if (step > 0) {
       cudaMemset(d_accel, 0, sizeof(float) * sdata->posdim * sdata->nparticles);
@@ -137,20 +136,22 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
 
     cudaThreadSynchronize();
     timer = start_timer();
-    compute_acceleration<<<sdata->nparticles / 1024 + 1, 1024>>>(d_sdata, d_accel, force_type, aux);
+    compute_acceleration<<<sdata->nparticles / 1024 + 1, 1024>>>(
+        d_sdata, d_accel, force_type, aux);
     cudaThreadSynchronize();
     force_calc_time += end_timer_silent(timer);
 
     timer = start_timer();
     cudaThreadSynchronize();
     switch (int_type) {
-      case INT_EULER:
-        euler_integrate<<<sdata->nparticles / 1024 + 1, 1024>>>(d_sdata, d_accel, time_step);
-        break;
-      case INT_LEAPFROG:
-        leapfrog_integrate<<<sdata->nparticles / 1024 + 1, 1024>>>(d_sdata, d_accel,
-            time_step, false);
-        break;
+    case INT_EULER:
+      euler_integrate<<<sdata->nparticles / 1024 + 1, 1024>>>(d_sdata, d_accel,
+                                                              time_step);
+      break;
+    case INT_LEAPFROG:
+      leapfrog_integrate<<<sdata->nparticles / 1024 + 1, 1024>>>(
+          d_sdata, d_accel, time_step, false);
+      break;
     }
     cudaThreadSynchronize();
     integration_time += end_timer_silent(timer);
@@ -162,5 +163,6 @@ __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
   simdata_copy_gpu_cpu(d_sdata, sdata);
   simdata_gpu_free(d_sdata);
   cudaFree(d_accel);
-  if (aux) cudaFree(aux);
+  if (aux)
+    cudaFree(aux);
 }

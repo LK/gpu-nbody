@@ -7,10 +7,9 @@
 #define MIN_SD 0.001
 #define MAX_SD 1000
 
-
 void load_images();
 void load_labels();
 void load_mnist();
 void showDigit(int index);
-int* getLabels();
-float** getImages();
+int *getLabels();
+float **getImages();
