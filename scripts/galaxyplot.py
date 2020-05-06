@@ -6,7 +6,7 @@ from subprocess import PIPE
 
 cpu_data = []
 gpu_data = []
-steps = 100
+steps = 500
 subprocess.run(["make","test-galaxy-cpu"])
 for i in [128,256,512,1024,2048,4096,8192]:
 	outputs = subprocess.run(["./bin/test-galaxy-cpu " + str(steps) + " " + str(i)], shell=True,stdout=PIPE,encoding='utf-8')
@@ -95,6 +95,13 @@ for i in [16384,20480,28672,32768,40960]:
 	tokens.append(i)
 	gpu_data.append(tokens)
 	print(i)
+
+
+x = np.array(gpu_data)[:,4]
+gpu_precomp = np.array(gpu_data)[:,0]
+gpu_force_calc = np.array(gpu_data)[:,1]
+gpu_integrated_y = np.array(gpu_data)[:,2]
+gpu_total_time = np.array(gpu_data)[:,3]
 
 plt.plot(x,gpu_total_time,label='GPU')
 plt.title('GPU Total Time')
