@@ -18,6 +18,7 @@ for i in [128,256,512,1024,2048,4096,8192]:
 	cpu_data.append(tokens)
 	print(i)
 
+subprocess.run(["make","test-galaxy-gpu"])
 for i in [128,256,512,1024,2048,4096,8192]:
 	outputs = subprocess.run(["./bin/test-galaxy-gpu " + str(steps) + " " + str(i)], shell=True,capture_output=True,encoding='utf-8')
 	tokens = outputs.stdout.split(", ")
@@ -42,6 +43,16 @@ gpu_precomp = np.array(cpu_data)[:,0]
 gpu_integrated_y = np.array(cpu_data)[:,2]
 gpu_force_calc = np.array(cpu_data)[:,1]
 gpu_total_time = np.array(cpu_data)[:,3]
+
+plt.plot(x,cpu_precomp,label='CPU')
+plt.plot(x,gpu_precomp,label='GPU')
+plt.title('Precomputation Time')
+plt.ylabel("Time (sec)")
+plt.xlabel("Num Bodies")
+plt.legend()
+plt.tight_layout()
+plt.savefig('plots/galaxy-fig-inte.jpg')
+plt.close()
 
 plt.plot(x,cpu_integrated_y,label='CPU')
 plt.plot(x,gpu_integrated_y,label='GPU')
