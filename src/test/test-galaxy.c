@@ -7,7 +7,6 @@
 #define TIME_STEP (0.01)
 #define STEPS (1000)
 
-// unsure if this should be here
 float scaleFactor = 1.5f;     // 10.0f, 50
 float velFactor = 8.0f;       // 15.0f, 100
 float massFactor = 120000.0f; // 50000000.0,

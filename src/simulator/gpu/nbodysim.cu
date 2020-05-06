@@ -21,6 +21,7 @@ __host__ void dump(simdata_t *sdata, int step) {
   }
 }
 
+/// Clone a data buffer from the CPU to the GPU.
 simdata_t *simdata_clone_cpu_gpu(simdata_t *sdata) {
   simdata_t *d_sdata;
   float *d_sdata_data;
@@ -35,6 +36,7 @@ simdata_t *simdata_clone_cpu_gpu(simdata_t *sdata) {
   return d_sdata;
 }
 
+/// Replace a CPU data buffer with data from the GPU.
 void simdata_copy_gpu_cpu(simdata_t *d_sdata, simdata_t *sdata) {
   float *data = sdata->data;
   cudaMemcpy(sdata, d_sdata, sizeof(simdata_t), cudaMemcpyDeviceToHost);
@@ -43,6 +45,7 @@ void simdata_copy_gpu_cpu(simdata_t *d_sdata, simdata_t *sdata) {
   sdata->data = data;
 }
 
+/// Free data buffer from GPU.
 void simdata_gpu_free(simdata_t *d_sdata) {
   simdata_t copy;
   cudaMemcpy(&copy, d_sdata, sizeof(simdata_t), cudaMemcpyDeviceToHost);
@@ -50,6 +53,7 @@ void simdata_gpu_free(simdata_t *d_sdata) {
   cudaFree(copy.data);
 }
 
+/// Main force computation GPU kernel.
 __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
                                      force_t force_type, float *aux) {
   int particleIdx = threadIdx.x + blockIdx.x * 1024;
@@ -89,6 +93,7 @@ __global__ void compute_acceleration(simdata_t *d_sdata, float *d_accel,
   }
 }
 
+/// Entrypoint to simulation on GPU.
 __host__ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
                              integrator_t int_type, force_t force_type,
                              float time_step, int steps) {

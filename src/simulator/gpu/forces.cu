@@ -3,6 +3,7 @@
 #include <cuda_runtime_api.h>
 #include <stdio.h>
 
+/// GPU kernel to perform precomputation step for Newtonian force function.
 __global__ void _newtonian_precompute_kernel(simdata_t *d_sdata, float *aux) {
   int idx = threadIdx.x + blockIdx.x * 1024;
   if (idx >= d_sdata->nparticles)
@@ -21,6 +22,7 @@ __host__ float *newtonian_precompute(simdata_t *d_sdata, int nparticles) {
   return aux;
 }
 
+/// Compute Newtonian force between two particles on GPU.
 __device__ void newtonian_compute(int particleA, int particleB, float *d_force,
                                   float *d_position, float *d_features,
                                   float *d_positionActor,

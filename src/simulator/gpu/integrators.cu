@@ -3,6 +3,7 @@
 #include <cuda_runtime_api.h>
 #include <stdio.h>
 
+/// GPU leapfrog integration (both steps are implemented in the same function)
 __global__ void leapfrog_integrate(simdata_t *d_sdata, float *d_acceleration,
                                    float dt, bool before_accel_update) {
   int idx = threadIdx.x + blockIdx.x * 1024;
@@ -20,6 +21,7 @@ __global__ void leapfrog_integrate(simdata_t *d_sdata, float *d_acceleration,
   }
 }
 
+/// Euler integration
 __global__ void euler_integrate(simdata_t *d_sdata, float *d_acceleration,
                                 float dt) {
   int idx = threadIdx.x + blockIdx.x * 1024;
