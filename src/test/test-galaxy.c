@@ -1,16 +1,17 @@
 #include "nbodysim.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "timing.h"
 
 #define MAXSTR (256)
-#define NUM_BODIES (2048)
 #define TIME_STEP (0.01)
-#define STEPS (10000)
+#define STEPS (1000)
 
 // unsure if this should be here
 float scaleFactor = 1.5f;     // 10.0f, 50
 float velFactor = 8.0f;       // 15.0f, 100
 float massFactor = 120000.0f; // 50000000.0,
+int NUM_BODIES = 4096;
 
 void dumpt(simdata_t *sdata, int step) {
   printf("=============== STEP %d ===============\n", step);
@@ -72,12 +73,22 @@ void load_data(simdata_t *sdata) {
 }
 
 int main(int argc, char **argv) {
+
+  int steps = STEPS;
+  if (argc == 2)
+    steps = atoi(argv[1]);
+  else if(argc == 3) {
+    steps = atoi(argv[1]);
+    if (atoi(argv[2]) % 2048 != 0) {
+      printf("Bodies must be multiples of 2048\n");
+      exit(1);
+    }
+    NUM_BODIES = atoi(argv[2]);
+  }
+  
   simdata_t *sdata = simdata_create(3, 1, NUM_BODIES);
   load_data(sdata);
 
-  int steps = STEPS;
-  if (argc > 1)
-    steps = atoi(argv[1]);
 
   simconfig_t sconfig = {.precompute = false};
   run_simulation(sdata, &sconfig, INT_LEAPFROG, FORCE_NEWTONIAN_SIMPLE,

@@ -1,3 +1,4 @@
+#include "timing.h"
 #include "nbodysim.h"
 #include "solarsystemdata.h"
 #include <stdlib.h>
@@ -37,7 +38,6 @@ void solar_system_test(celestial_t test_planet) {
   float julian_date_offset;
   float real_position[3], real_velocity[3];
   simconfig_t sconfig = {.precompute = false};
-
   for (int i = 1; i < num_dates; i++) {
     julian_date_offset = julian_dates[i - 1];
     run_simulation(
