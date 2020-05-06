@@ -6,7 +6,7 @@ from subprocess import PIPE
 
 cpu_data = []
 gpu_data = []
-steps = 1000
+steps = 100
 subprocess.run(["make","test-galaxy-cpu"])
 for i in [128,256,512,1024,2048,4096,8192]:
 	outputs = subprocess.run(["./bin/test-galaxy-cpu " + str(steps) + " " + str(i)], shell=True,stdout=PIPE,encoding='utf-8')
@@ -102,5 +102,32 @@ plt.ylabel("Time (sec)")
 plt.xlabel("Num Bodies")
 plt.legend()
 plt.tight_layout()
-plt.savefig('plots/galaxy-fig-force.png')
+plt.savefig('plots/galaxy-fig-force-gpu.png')
+plt.close()
+
+plt.plot(x,gpu_integrated_y,label='GPU')
+plt.title('GPU Integration Time')
+plt.ylabel("Time (sec)")
+plt.xlabel("Num Bodies")
+plt.legend()
+plt.tight_layout()
+plt.savefig('plots/galaxy-fig-inte-gpu.png')
+plt.close()
+
+plt.plot(x,gpu_force_calc,label='GPU')
+plt.title('GPU Force Calc Time')
+plt.ylabel("Time (sec)")
+plt.xlabel("Num Bodies")
+plt.legend()
+plt.tight_layout()
+plt.savefig('plots/galaxy-fig-force-gpu.png')
+plt.close()
+
+plt.plot(x,gpu_total_time,label='GPU')
+plt.title('GPU Total Time')
+plt.ylabel("Time (sec)")
+plt.xlabel("Num Bodies")
+plt.legend()
+plt.tight_layout()
+plt.savefig("plots/galaxy-fig-gpu.png")
 plt.close()
