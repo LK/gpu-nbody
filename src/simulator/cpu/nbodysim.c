@@ -1,4 +1,6 @@
 #include "nbodysim.h"
+#include "timing.h"
+#include "tsneforces.c"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,6 +87,24 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
   float *accelerations =
       (float *)malloc(sizeof(float) * sdata->posdim * sdata->nparticles);
   memset(accelerations, 0, sdata->posdim * sdata->nparticles * sizeof(float));
+
+  measure_t *precomputeTimer = start_timer();
+  float *aux  = NULL;
+  if (sconfig->precompute) {
+    switch (force_type) {
+      case FORCE_TSNE:
+        aux = tsne_precompute(sdata, sdata->nparticles);
+        break;
+      case FORCE_NEWTONIAN:
+        break;
+      case FORCE_NEWTONIAN_SIMPLE:
+        // aux = newtonian_precompute(d_sdata, sdata->nparticles);
+        break;
+    }
+  }
+  end_timer(precomputeTimer);
+
+  measure_t *computeTimer = start_timer();
   for (int step = 0; step < steps; step++) {
 
     switch (int_type) {
@@ -95,10 +115,19 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
       break;
     }
 
+    switch (force_type) {
+    case FORCE_TSNE:
+      setQjiDenominator(sdata, aux);
+      break;
+    default:
+      break;
+    }
+
     if (step > 0) {
       memset(accelerations, 0,
              sizeof(float) * sdata->posdim * sdata->nparticles);
     }
+
     for (int i = 0; i < sdata->nparticles; i++) {
       float *acceleration = &accelerations[i * sdata->posdim];
 
@@ -111,11 +140,23 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
         float *positionActor = simdata_pos_ptr(sdata, j);
         float *featuresActor = simdata_feat_ptr(sdata, j);
 
-        getForce(acceleration, position, features, positionActor, featuresActor,
+        switch (force_type) {
+        case FORCE_TSNE:
+          getTsneForce(acceleration, position, i, positionActor, j,
+                 sdata, aux);
+          break;
+        case FORCE_NEWTONIAN:
+        case FORCE_NEWTONIAN_SIMPLE:
+          getForce(acceleration, position, features, positionActor, featuresActor,
                  sdata);
+          break;
+        }
+
       }
       for (int j = 0; j < sdata->posdim; j++) {
         switch (force_type) {
+        case FORCE_TSNE:
+          break;
         case FORCE_NEWTONIAN:
           acceleration[j] = acceleration[j] *
                             (6.673 * pow(10, -11) * 13.3153474) / features[0];
@@ -136,5 +177,8 @@ void run_simulation(simdata_t *sdata, simconfig_t *sconfig,
       break;
     }
   }
+  end_timer(computeTimer);
+
+  if(aux) free(aux);
   free(accelerations);
 }
