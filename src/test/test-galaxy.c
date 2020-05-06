@@ -79,13 +79,13 @@ int main(int argc, char **argv) {
     steps = atoi(argv[1]);
   else if(argc == 3) {
     steps = atoi(argv[1]);
-    if (atoi(argv[2]) % 2048 != 0) {
-      printf("Bodies must be multiples of 2048\n");
+    if (atoi(argv[2]) % 2 != 0) {
+      printf("Bodies must be multiples of 2\n");
       exit(1);
     }
     NUM_BODIES = atoi(argv[2]);
   }
-  
+
   simdata_t *sdata = simdata_create(3, 1, NUM_BODIES);
   load_data(sdata);
 
