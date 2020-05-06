@@ -60,3 +60,6 @@ data/*.tab
 
 # vscode
 .vscode/
+
+# venv
+venv/
