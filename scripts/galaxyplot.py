@@ -30,7 +30,8 @@ a[0][1].plot(x,force_calc)
 a[0][1].set_title('Force Calc Time')
 a[1][0].plot(x,total_time)
 a[1][0].set_title('Total Time')
-plt.show()
+fig.tight_layout()
+plt.savefig("scripts/galaxy-fig.jpg")
 
 
 

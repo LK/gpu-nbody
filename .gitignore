@@ -56,3 +56,4 @@ dkms.conf
 
 # Test Files
 data/*.tab
+*.jpg
