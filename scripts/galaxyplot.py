@@ -2,13 +2,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import subprocess
+from subprocess import PIPE
 
 cpu_data = []
 gpu_data = []
 steps = 10
 subprocess.run(["make","test-galaxy-cpu"])
 for i in [128,256,512,1024,2048,4096,8192]:
-	outputs = subprocess.run(["./bin/test-galaxy-cpu " + str(steps) + " " + str(i)], shell=True,capture_output=True,encoding='utf-8')
+	outputs = subprocess.run(["./bin/test-galaxy-cpu " + str(steps) + " " + str(i)], shell=True,stdout=PIPE,encoding='utf-8')
 	tokens = outputs.stdout.split(", ")
 	tokens[0] = float(tokens[0])
 	tokens[1] = float(tokens[1])
@@ -20,7 +21,7 @@ for i in [128,256,512,1024,2048,4096,8192]:
 
 subprocess.run(["make","test-galaxy-gpu"])
 for i in [128,256,512,1024,2048,4096,8192]:
-	outputs = subprocess.run(["./bin/test-galaxy-gpu " + str(steps) + " " + str(i)], shell=True,capture_output=True,encoding='utf-8')
+	outputs = subprocess.run(["./bin/test-galaxy-gpu " + str(steps) + " " + str(i)], shell=True,stdout=PIPE,encoding='utf-8')
 	tokens = outputs.stdout.split(", ")
 	tokens[0] = float(tokens[0])
 	tokens[1] = float(tokens[1])
