@@ -4,8 +4,10 @@
 #include <cuda_runtime_api.h>
 
 __global__ void _newtonian_precompute_kernel(simdata_t *d_sdata, float *aux) {
-  float myMass = simdata_feat_ptr(d_sdata, threadIdx.x)[0];
-  float *myAux = aux + d_sdata->nparticles * threadIdx.x;
+  int idx = threadIdx.x + blockIdx.x * 1024;
+  if (idx >= d_sdata->nparticles) return;
+  float myMass = simdata_feat_ptr(d_sdata, idx)[0];
+  float *myAux = aux + d_sdata->nparticles * idx;
   for (int i = 0; i < d_sdata->nparticles; i++) {
     myAux[i] = myMass * simdata_feat_ptr(d_sdata, i)[0];
   }
@@ -14,7 +16,7 @@ __global__ void _newtonian_precompute_kernel(simdata_t *d_sdata, float *aux) {
 __host__ float *newtonian_precompute(simdata_t *d_sdata, int nparticles) {
   float *aux;
   cudaMalloc(&aux, sizeof(float) * nparticles * nparticles);
-  _newtonian_precompute_kernel<<<1, nparticles>>>(d_sdata, aux);
+  _newtonian_precompute_kernel<<<nparticles / 1024 + 1, 1024>>>(d_sdata, aux);
   return aux;
 }
 

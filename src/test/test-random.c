@@ -15,9 +15,10 @@ void dumpt(simdata_t *sdata, int step) {
 }
 
 int main() {
-  simdata_t *sdata = simdata_create(3, 1, 1024);
+  int nparticles = 1050;
+  simdata_t *sdata = simdata_create(3, 1, nparticles);
   srand(216);
-  for (int i = 0; i < 1024; i++) {
+  for (int i = 0; i < nparticles; i++) {
     float *pos = simdata_pos_ptr(sdata, i);
     float *vel = simdata_vel_ptr(sdata, i);
     simdata_feat_ptr(sdata, i)[0] = ((float)rand() / RAND_MAX) * 100.0f;
